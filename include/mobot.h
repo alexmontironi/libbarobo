@@ -55,7 +55,40 @@
 #include <array.h>
 #endif
 
+/* 23 April 2014, hlh: Including MinGW C++ headers before stdio.h causes a
+ * crash in dongle_get_tty_win32.cpp upon the first call to
+ * SetupDiEnumDeviceInfo. Specifically, MinGW C++ headers include:
+ *   bits/c++config.h, which includes
+ *   bits/os_defines.h, which defines
+ *   ___USE_MINGW_ANSI_STDIO 1
+ *
+ * [This next paragraph is partly conjecture.]
+ *
+ * If __USE_MINGW_ANSI_STDIO is defined before stdio.h is included, then MinGW
+ * uses C99-conformant Standard I/O from libmingwex.a (see [1]). If not, then
+ * it uses Microsoft's non-C99-conformant MSVCRT runtime. Somehow, delay-loaded
+ * DLLs (i.e., setupapi.dll) get mixed up in this. If __USE_MINGW_ANSI_STDIO
+ * is defined, but a Standard I/O call is made inside Mobot_dongleGetTTY
+ * before the call to SetupDiEnumDeviceInfo, then Windows loads its libraries
+ * in the correct order and everything is fine.
+ *
+ * Solutions/Workarounds:
+ *   - Put a dummy printf in Mobot_dongleGetTTY.
+ *   - Ensure that no C++ headers are included before stdio.h.
+ *
+ * A couple other clues I picked up: when __USE_MINGW_ANSI_STDIO is 0 or
+ * undefined, setupapi.dll loads wintrust.dll, which has something to do with
+ * application privileges. When the symbol is 1, setupapi.dll does not load
+ * wintrust.dll, and the aforementioned crash occurs.
+ *
+ * [1] http://en.wikipedia.org/wiki/MinGW#Programming_language_support
+ */
+
 #include <stdio.h>
+
+#if __cplusplus
+#include <string>
+#endif
 
 #if defined (NONRELEASE) || defined (SWIG)
 #ifndef _CH_
@@ -210,6 +243,9 @@ typedef enum mobotFormFactor_e
 
 #ifndef BR_COMMS_S
 #define BR_COMMS_S
+
+typedef void (*Mobot_progressCallbackFunc)(double progress, void* user_data);
+typedef void (*Mobot_completionCallbackFunc)(int complete, void* user_data);
 
 struct mobot_s;
 typedef struct mobotInfo_s
@@ -433,6 +469,11 @@ class CMobot
     CMobot();
     ~CMobot();
     int blinkLED(double delay, int numBlinks);
+    bool canFlashFirmware ();
+    int flashFirmwareAsync (std::string hexfile,
+                            Mobot_progressCallbackFunc progressCallback,
+                            Mobot_completionCallbackFunc completionCallback,
+                            void* user_data);
 /* connect() Return Error Codes:
    -1 : General Error
    -2 : Lockfile Exists
@@ -639,6 +680,13 @@ class DLLIMPORT CMobot
         double vmax,
         double angle);
     virtual int blinkLED(double delay, int numBlinks);
+
+    virtual bool canFlashFirmware ();
+    virtual int flashFirmwareAsync (std::string hexfile,
+                                    Mobot_progressCallbackFunc progressCallback,
+                                    Mobot_completionCallbackFunc completionCallback,
+                                    void* user_data);
+
 /* connect() Return Error Codes:
    -1 : General Error
    -2 : Lockfile Exists
@@ -1017,6 +1065,7 @@ DLLIMPORT int Mobot_connectWithBluetoothAddress(
     mobot_t* comms, const char* address, int channel);
 DLLIMPORT int Mobot_disableJointEventCallback(mobot_t* comms);
 DLLIMPORT int Mobot_disableAccelEventCallback(mobot_t* comms);
+
 /* Find the serial device the robot is plugged into. The device's
  * fully-qualified path is stored in the tty output parameter as a
  * null-terminated string. Example device paths for various OSes are
@@ -1026,6 +1075,24 @@ DLLIMPORT int Mobot_disableAccelEventCallback(mobot_t* comms);
  * Mobot_dongleGetTTY will write at most len bytes to tty, including the
  * terminating null byte. Returns -1 on error, 0 on success. */
 DLLIMPORT int Mobot_dongleGetTTY(char* tty, size_t len);
+
+/* True if it is possible to flash this robot's firmware, false otherwise.
+ * Under the hood, this checks to see if the robot is connected via TTY (i.e.,
+ * USB). */
+DLLIMPORT int Mobot_canFlashFirmware (mobot_t* comms);
+
+/* Begin flashing the firmware of a robot connected by TTY. Parameters include
+ * the hexfile filename (not the raw data), and two callbacks. Where progress
+ * is measured from 0.0 to 1.0, the thread on which the flash operation runs
+ * will call progressCallback every time there is a change in progress. Once
+ * the operation is complete, completionCallback is called with the value of
+ * 1 for success, 0 for failure. The user_data parameter gets passed to the
+ * user's callbacks. */
+DLLIMPORT int Mobot_flashFirmwareAsync (mobot_t* comms, const char* hexfile,
+    Mobot_progressCallbackFunc progressCallback,
+    Mobot_completionCallbackFunc completionCallback,
+    void* userData);
+
 DLLIMPORT int Mobot_connectWithZigbeeAddress(mobot_t* comms, uint16_t addr);
 DLLIMPORT int Mobot_enableAccelEventCallback(mobot_t* comms, void* data,
     void (*accelCallback)(int millis, double x, double y, double z, void* data));
