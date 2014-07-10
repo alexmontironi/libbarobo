@@ -216,11 +216,11 @@ int Mobot_driveAccelDistanceNB(mobot_t* comms, double radius, double acceleratio
 	{
 		if (i == 3)
 		{
-			rc = Mobot_accelJointAngleNB(comms, (robotJointId_t)i, -angle, -alpha);
+			rc = Mobot_accelJointAngleNB(comms, (robotJointId_t)i, -alpha, -angle);
 		}
 		else
 		{
-			rc = Mobot_accelJointAngleNB(comms, (robotJointId_t)i, angle, alpha);
+			rc = Mobot_accelJointAngleNB(comms, (robotJointId_t)i, alpha, angle);
 		}
 
 		if (rc) return rc;
@@ -257,6 +257,7 @@ int Mobot_accelJointCycloidalNB(mobot_t* comms, robotJointId_t id, double angle,
 	uint32_t millis;
 	float a;
 	int status;
+	printf("cyclo angle %lf time %lf\n", angle, time);
 
 	a=angle;
 
