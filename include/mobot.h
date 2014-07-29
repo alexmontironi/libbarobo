@@ -1239,7 +1239,8 @@ DLLIMPORT int Mobot_enableJointEventCallback(mobot_t* comms, void* data,
 DLLIMPORT int Mobot_findMobot(mobot_t* parent, const char* childSerialID);
 DLLIMPORT mobotMelodyNote_t* Mobot_createMelody(int tempo);
 DLLIMPORT int Mobot_melodyAddNote(mobotMelodyNote_t* melody, const char* note, int divider);
-DLLIMPORT int Mobot_loadMelody(mobot_t* comms, int id, mobotMelodyNote_t* melody);
+//DLLIMPORT int Mobot_loadMelody(mobot_t* comms, int id, mobotMelodyNote_t* melody);
+DLLIMPORT int Mobot_loadMelody(mobot_t* comms, mobotMelodyNote_t* melody);
 DLLIMPORT int Mobot_playMelody(mobot_t* comms, int id);
 DLLIMPORT int Mobot_getAddress(mobot_t* comms);
 DLLIMPORT mobot_t* Mobot_getDongle();

@@ -1298,7 +1298,7 @@ int Mobot_melodyAddNote(mobotMelodyNote_t* melody, const char* note, int divider
   return 0;
 }
 
-int Mobot_loadMelody(mobot_t* comms, int id, mobotMelodyNote_t* melody)
+/*int Mobot_loadMelody(mobot_t* comms, int id, mobotMelodyNote_t* melody)
 {
   uint8_t data[256];
   uint8_t length;
@@ -1324,12 +1324,103 @@ int Mobot_loadMelody(mobot_t* comms, int id, mobotMelodyNote_t* melody)
 #endif
     status = RecvFromIMobot(comms, (uint8_t*)recvBuf, sizeof(recvBuf));
   }
-  /* Make sure the data size is correct */
+  /* Make sure the data size is correct 
   if(recvBuf[1] != 3) {
     return -1;
   }
   return status;
+}*/
+int Mobot_loadMelody(mobot_t* comms, mobotMelodyNote_t* melody)
+{
+  uint8_t data[256], buf[8];
+  uint8_t length;
+  int id, numpackets, i, slot;
+  int numslots = 2; //(numslots +1 = number of slots in the EEPROM memory) 
+  int size = 8; //number of notes in each packet
+  int status = 1;
+  int retries;
+  int bufready = 1; //flag to know when to send new data
+  int recvBuf[16];
+  mobotMelodyNote_t* iter;
+  iter = melody->next;
+  //get the number of notes in the list
+  for(length = 0; iter != NULL; length++, iter = iter->next);
+  //calculate the number of packets to send
+  numpackets = floor(length/(double)size) +1 ;
+  for (id = 0; id < numpackets; id++)
+  {
+	  data[0] = (uint8_t)id;
+	  data[1] = iter->tempo;
+	  data[2] = size; //number of notes in each packet
+	  if (id == 0)
+	  {
+		  iter = melody->next; //reset only the firs time
+	  }
+      /*Build the packet*/
+	  for(i = 1; i <= size; i++) {
+		  memcpy(&data[i*2+1], &iter->notedata[0], 2);
+		  iter = iter->next;
+	  }
+	  if ( bufready == 1) //send new chunk of melody only if the buffer is ready
+	  {
+	       for(retries = 0; retries <= MAX_RETRIES && status != 0; retries++) 
+		   {
+			   SendToIMobot(comms, BTCMD(CMD_LOADMELODY), data, size*2+1);
+           #ifndef _WIN32
+               usleep(500000);
+           #else
+               Sleep(500);
+           #endif
+               status = RecvFromIMobot(comms, (uint8_t*)recvBuf, sizeof(recvBuf));
+			    /* Make sure there is space in the buffer */
+			   memcpy(&slot, &recvBuf[2], 4);
+               if(slot < numslots)
+		       {
+			   bufready = 1;
+			   break;
+		       }
+		       else
+		       {
+			   bufready = 0; 
+			   break;
+		       }
+		   }
+	  }
+      if ( id == 0) //initialize melody in the firmware when the first packet is sent
+      {
+          for(retries = 0; retries <= MAX_RETRIES && status != 0; retries++) 
+		  {
+		      buf[0] = 1;
+			  status = MobotMsgTransaction(comms, BTCMD(CMD_INITMELODY), buf, 1);
+		  }
+	   }
+	  /*poll to check when there is a free slot in memory in the Linkbot*/
+	  while ( bufready == 0)
+	  {
+		  status = MobotMsgTransaction(comms, BTCMD(CMD_GETMELODYSLOT), buf, 0);
+		  memcpy(&slot, &buf[2], 4);
+		   /* Make sure there is space in the buffer */
+           if(slot < numslots)
+		   {
+		       bufready = 1;
+			   id --; //need to resend the same packet
+			   break;
+		    }
+		    else
+		    {
+			   bufready = 0; 
+			   //wait
+			   #ifndef _WIN32
+               usleep(500000);
+               #else
+               Sleep(500);
+               #endif
+		    }
+	  }
+  }
+  return status;
 }
+
 
 int Mobot_playMelody(mobot_t* comms, int id)
 {

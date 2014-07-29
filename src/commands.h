@@ -608,6 +608,14 @@ enum protocol_commands_e {
  * Command Format: [CMD] [size] [1 byte id] [4 byte angle][4 bytes timeout millis MSB] [0x00] */
   CMD_HARM_ACCEL,
 
+  /*0x92 CMD_INITMELODY: initialize the melody playing [98]
+  * Command Format: [CMD] [1][0x11]*/
+  CMD_INITMELODY,
+
+  /*0x93 CMD_GETMELODYSLOT: get the last written melody slot [99]
+  * Comand format: [CMD][0X03][0X11]
+  * Expected response: [0x10] [0x07] [4 bytes memory slot id] [0x00]*/
+  CMD_GETMELODYSLOT,
 
   CMD_NUMCOMMANDS
 };
