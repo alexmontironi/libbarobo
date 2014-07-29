@@ -1335,11 +1335,11 @@ int Mobot_loadMelody(mobot_t* comms, mobotMelodyNote_t* melody)
   uint8_t data[256], buf[8];
   uint8_t length;
   int id, numpackets, i, slot;
-  int numslots = 2; //(numslots +1 = number of slots in the EEPROM memory) 
-  int size = 8; //number of notes in each packet
+  int numslots = 3; //(numslots +1 = number of slots in the EEPROM memory) 
+  int size = 16; //number of notes in each packet. Fill 32 bytes. Each note is 2 bytes
   int status = 1;
   int retries;
-  int bufready = 1; //flag to know when to send new data
+  int bufready = 1; //flag to know when to send new data. 1 means it's ok to send.
   int recvBuf[16];
   mobotMelodyNote_t* iter;
   iter = melody->next;
@@ -1394,6 +1394,16 @@ int Mobot_loadMelody(mobot_t* comms, mobotMelodyNote_t* melody)
 			  status = MobotMsgTransaction(comms, BTCMD(CMD_INITMELODY), buf, 1);
 		  }
 	   }
+
+	  else if ( id == (numpackets-1) ) //send message it's last chunck
+	  {
+		  for(retries = 0; retries <= MAX_RETRIES && status != 0; retries++) 
+		  {
+		      buf[0] = 1;
+			  status = MobotMsgTransaction(comms, BTCMD(CMD_STOPMELODY), buf, 1);
+		  }
+	   }
+
 	  /*poll to check when there is a free slot in memory in the Linkbot*/
 	  while ( bufready == 0)
 	  {
