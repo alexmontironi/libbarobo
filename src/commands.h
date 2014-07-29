@@ -610,7 +610,7 @@ enum protocol_commands_e {
 
   /*0x92 CMD_INITMELODY: initialize the melody playing [98]
   * Command Format: [CMD] [0x01][0x11]*/
-  CMD_INITMELODY,
+  CMD_MELODYINIT,
 
   /*0x93 CMD_GETMELODYSLOT: get the last written melody slot [99]
   * Command format: [CMD][0X03][0X11]

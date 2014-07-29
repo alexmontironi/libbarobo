@@ -1346,34 +1346,46 @@ int Mobot_loadMelody(mobot_t* comms, mobotMelodyNote_t* melody)
   //get the number of notes in the list
   for(length = 0; iter != NULL; length++, iter = iter->next);
   //calculate the number of packets to send
-  numpackets = floor(length/(double)size) +1 ;
+  numpackets = floor(length/(double)size) +2 ;
+  iter = melody->next;
   for (id = 0; id < numpackets; id++)
   {
-	  data[0] = (uint8_t)id;
-	  data[1] = iter->tempo;
+	  printf("id %d\n", id);
+          printf("i %d ", i);
+          i = 1;
+          //printf("tempo %d\n", melody->tempo);
+          data[0] = (uint8_t)id;
+	  data[1] = melody->tempo;
 	  data[2] = size; //number of notes in each packet
 	  if (id == 0)
 	  {
-		  iter = melody->next; //reset only the firs time
+		  iter = melody->next; //reset only the first time
 	  }
-      /*Build the packet*/
+          /*Build the packet*/
+          printf("iter %p\n", iter);
+          //doesn't want to get in here on the second run
 	  for(i = 1; i <= size; i++) {
+                  printf("i %d ", i);
 		  memcpy(&data[i*2+1], &iter->notedata[0], 2);
 		  iter = iter->next;
 	  }
+          printf("\n");
 	  if ( bufready == 1) //send new chunk of melody only if the buffer is ready
 	  {
 	       for(retries = 0; retries <= MAX_RETRIES && status != 0; retries++) 
 		   {
 			   SendToIMobot(comms, BTCMD(CMD_LOADMELODY), data, size*2+1);
-           #ifndef _WIN32
-               usleep(500000);
+                           printf("retries = %d\n", retries);
+          #ifndef _WIN32
+               usleep(100000);
            #else
-               Sleep(500);
+               Sleep(100);
            #endif
                status = RecvFromIMobot(comms, (uint8_t*)recvBuf, sizeof(recvBuf));
 			    /* Make sure there is space in the buffer */
 			   memcpy(&slot, &recvBuf[2], 4);
+           slot = 1;
+            printf("slot %d\n", slot);
                if(slot < numslots)
 		       {
 			   bufready = 1;
@@ -1388,11 +1400,14 @@ int Mobot_loadMelody(mobot_t* comms, mobotMelodyNote_t* melody)
 	  }
       if ( id == 0) //initialize melody in the firmware when the first packet is sent
       {
-          for(retries = 0; retries <= MAX_RETRIES && status != 0; retries++) 
-		  {
+             printf("Junk3\n");
+             /*for(retries = 0; retries <= MAX_RETRIES && status != 0; retries++) 
+		  {*/
 		      buf[0] = 1;
-			  status = MobotMsgTransaction(comms, BTCMD(CMD_INITMELODY), buf, 1);
-		  }
+                      printf("junk4\n");
+	              status = MobotMsgTransaction(comms, BTCMD(CMD_MELODYINIT), buf, 4);
+                      printf("junk5\n");
+		 // 
 	   }
 
 	  else if ( id == (numpackets-1) ) //send message it's last chunck

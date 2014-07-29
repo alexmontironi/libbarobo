@@ -47,7 +47,7 @@ int main()
   sleep(3);
   Mobot_stop(&mobot);
 #endif
-  Mobot_loadMelody(&mobot, 1, head);
+  Mobot_loadMelody(&mobot,  head);
   //Mobot_loadMelody(child, 1, head);
   Mobot_playMelody(&mobot, 1);
   //Mobot_playMelody(child, 1);
