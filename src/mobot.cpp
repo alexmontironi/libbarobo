@@ -1334,13 +1334,18 @@ int Mobot_loadMelody(mobot_t* comms, mobotMelodyNote_t* melody)
 {
   uint8_t data[256], buf[64];
   uint8_t length;
+  uint8_t nullnote[2]; //null note to fill up incomplete buffer
   int id, numpackets, i, slot;
   int numslots = 3; //(numslots +1 = number of slots in the EEPROM memory) 
-  int size = 16; //number of notes in each packet. Fill 32 bytes. Each note is 2 bytes
+  int size = 15; //number of notes in each packet. Fill 32 bytes. Each note is 2 bytes
   int status = 1;
   int retries;
   int bufready = 1; //flag to know when to send new data. 1 means it's ok to send.
   int recvBuf[16];
+
+  nullnote[0] = 0;
+  nullnote[1] = 0;
+
   mobotMelodyNote_t* iter;
   iter = melody->next;
   //get the number of notes in the list
@@ -1351,12 +1356,12 @@ int Mobot_loadMelody(mobot_t* comms, mobotMelodyNote_t* melody)
   iter = melody->next;
   for (id = 0; id < numpackets; id++)
   {
-	  printf("id %d\n", id);
+	  printf("id %d\n", (uint8_t)id);
           //printf("i %d ", i);
           //i = 1;
           data[0] = (uint8_t)id;
 	  data[1] = melody->tempo;
-	  data[2] = size; //number of notes in each packet
+	  //data[2] = size; //number of notes in each packet
 	  if (id == 0)
 	  {
 		  iter = melody->next; //reset only the first time
@@ -1364,29 +1369,46 @@ int Mobot_loadMelody(mobot_t* comms, mobotMelodyNote_t* melody)
           /*Build the packet*/
 	  for(i = 1; i <= size; i++) {
                   printf("i %d ", i);
+                  if (iter->next == NULL)
+                  {
+                     while ( i <= size)
+                     {
+                         memcpy(&data[i*2+1], &nullnote[0], 2);
+                         i++;
+                     }
+                     break;
+                  }
 		  memcpy(&data[i*2+1], &iter->notedata[0], 2);
 		  iter = iter->next;
                   printf("data %d \n", iter->notedata[0]);
-                  if (iter->next == NULL)
-                  {
-                     break;
-                  }
 
 	  }
+	  data[2] = (uint8_t)i; //number of notes in each packet
           printf("\n");
 	  if ( bufready == 1) //send new chunk of melody only if the buffer is ready
 	  {
+          if ( id == 0)
+          {
           #ifndef _WIN32
-               usleep(2000000);
+               usleep(500000);
            #else
-               Sleep(2000);
+               Sleep(500);
            #endif
+           }
+           else 
+           {
+          #ifndef _WIN32
+               usleep(3000000);
+           #else
+               Sleep(3000);
+           #endif
+            }
 	       //for(retries = 0; retries <= MAX_RETRIES && status != 0; retries++) 
 	       for(retries = 0; retries <= MAX_RETRIES ; retries++) 
 		   {
                            printf("inside\n");
-			   SendToIMobot(comms, BTCMD(CMD_LOADMELODY), data, i*2+1);
-                           printf("i sent= %d\n", i);
+			   SendToIMobot(comms, BTCMD(CMD_LOADMELODY), data, i*2+2);
+                           printf("i sent= %d\n",(i*2+2));
           #ifndef _WIN32
                usleep(100000);
            #else
@@ -1396,7 +1418,7 @@ int Mobot_loadMelody(mobot_t* comms, mobotMelodyNote_t* melody)
 			    /* Make sure there is space in the buffer */
 			  // memcpy(&slot, &recvBuf[2], 4);
            printf("packet %d sent\n", id);
-           printf("slot %d\n", (int)recvBuf[5]);
+           printf("slot %d\n", recvBuf[7]);
            printf("status %d\n", status);
            slot = id;
                if(slot < numslots)
@@ -1426,9 +1448,9 @@ int Mobot_loadMelody(mobot_t* comms, mobotMelodyNote_t* melody)
 	  if ( id == (numpackets-1) ) //send message it's last chunck
 	  {
           #ifndef _WIN32
-               usleep(10000000);
+               usleep(3000000);
            #else
-               Sleep(10000);
+               Sleep(3000);
            #endif
            status = 1;
 		  for(retries = 0; retries <= MAX_RETRIES && status != 0; retries++) 

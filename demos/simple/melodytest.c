@@ -19,12 +19,12 @@ int main()
   }*/
   head = Mobot_createMelody(50);
   
-  Mobot_melodyAddNote(head, "A", 16);
+  /*Mobot_melodyAddNote(head, "A", 16);
   Mobot_melodyAddNote(head, "C", 16);
   Mobot_melodyAddNote(head, "E", 16);
-  Mobot_melodyAddNote(head, "A5", 16);
+  Mobot_melodyAddNote(head, "A5", 16);*/
   Mobot_melodyAddNote(head, "E", 16);
- /* Mobot_melodyAddNote(head, "C", 16);
+  Mobot_melodyAddNote(head, "C", 16);
   Mobot_melodyAddNote(head, "E", 16);
   Mobot_melodyAddNote(head, "G#", 16);
   Mobot_melodyAddNote(head, "B", 16);
@@ -33,13 +33,13 @@ int main()
   Mobot_melodyAddNote(head, "G#", 16);
   Mobot_melodyAddNote(head, "A", 16);
   Mobot_melodyAddNote(head, "C", 16);
-  Mobot_melodyAddNote(head, "E", 16);
+  /*Mobot_melodyAddNote(head, "E", 16);
   Mobot_melodyAddNote(head, "A5", 16);
   Mobot_melodyAddNote(head, "E", 16);
   Mobot_melodyAddNote(head, "C", 16);
-  Mobot_melodyAddNote(head, "A", 16);*/
+  Mobot_melodyAddNote(head, "A", 16);
 
-  /*Mobot_melodyAddNote(head, "E5", 16);
+  Mobot_melodyAddNote(head, "E5", 16);
   Mobot_melodyAddNote(head, "D#5", 16);
   Mobot_melodyAddNote(head, "E5", 16);
   Mobot_melodyAddNote(head, "D#5", 16);
@@ -49,8 +49,8 @@ int main()
   Mobot_melodyAddNote(head, "c5", 16);
   Mobot_melodyAddNote(head, "a4", 16);
   Mobot_melodyAddNote(head, "e3", 16);
-  Mobot_melodyAddNote(head, "a3", 16);
-  Mobot_melodyAddNote(head, "c4", 16);
+  Mobot_melodyAddNote(head, "a3", 16);*/
+  /*Mobot_melodyAddNote(head, "c4", 16);
   Mobot_melodyAddNote(head, "e4", 16);
   Mobot_melodyAddNote(head, "a4", 16);
   Mobot_melodyAddNote(head, "b4", 16);
@@ -77,9 +77,9 @@ int main()
   Mobot_melodyAddNote(head, "b4", 16);
   Mobot_melodyAddNote(head, "d5", 16);
   Mobot_melodyAddNote(head, "c5", 16);
-  Mobot_melodyAddNote(head, "a4", 16);
+  Mobot_melodyAddNote(head, "a4", 16);*/
   
-  Mobot_melodyAddNote(head, "e3", 16);
+  /*Mobot_melodyAddNote(head, "e3", 16);
   Mobot_melodyAddNote(head, "a3", 16);
   Mobot_melodyAddNote(head, "e4", 16);*/
   
