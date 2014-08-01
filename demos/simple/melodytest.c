@@ -11,7 +11,7 @@ int main()
   mobotMelodyNote_t* head;
   int rc;
   Mobot_init(&mobot);
-  Mobot_connectWithAddress(&mobot, "JNS1", 1);
+  Mobot_connectWithAddress(&mobot, "61BZ", 1);
   //Mobot_connectWithTTY(&mobot, "/dev/ttyACM0");
   /*if(rc = Mobot_connectWithTTY(&mobot, "/dev/ttyACM0")) {
     printf("connection failed.\n");
@@ -39,10 +39,10 @@ int main()
   Mobot_melodyAddNote(head, "C", 16);
   Mobot_melodyAddNote(head, "A", 16);
 
-  /*Mobot_melodyAddNote(head, "E5", 16);
-  Mobot_melodyAddNote(head, "D#5", 16);
   Mobot_melodyAddNote(head, "E5", 16);
   Mobot_melodyAddNote(head, "D#5", 16);
+  Mobot_melodyAddNote(head, "E5", 16);
+  /*Mobot_melodyAddNote(head, "D#5", 16);
   Mobot_melodyAddNote(head, "E5", 16);
   Mobot_melodyAddNote(head, "b4", 16);
   Mobot_melodyAddNote(head, "d5", 16);

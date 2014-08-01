@@ -1403,9 +1403,9 @@ int Mobot_loadMelody(mobot_t* comms, mobotMelodyNote_t* melody)
            else 
            {
           #ifndef _WIN32
-               usleep(3000000);
+               usleep(2000000);
            #else
-               Sleep(3000);
+               Sleep(2000);
            #endif
             }
 	       //for(retries = 0; retries <= MAX_RETRIES && status != 0; retries++) 
