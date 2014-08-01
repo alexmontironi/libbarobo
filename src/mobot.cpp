@@ -1335,13 +1335,14 @@ int Mobot_loadMelody(mobot_t* comms, mobotMelodyNote_t* melody)
   uint8_t data[256], buf[64];
   uint8_t length;
   uint8_t nullnote[2]; //null note to fill up incomplete buffer
-  int id, numpackets, i, slot;
+  int id, numpackets, i, slot, inull;
   int numslots = 3; //(numslots +1 = number of slots in the EEPROM memory) 
   int size = 15; //number of notes in each packet. Fill 32 bytes. Each note is 2 bytes
   int status = 1;
   int retries;
   int bufready = 1; //flag to know when to send new data. 1 means it's ok to send.
   int recvBuf[16];
+  unsigned long ms=0, ns=0;
 
   nullnote[0] = 0;
   nullnote[1] = 0;
@@ -1371,6 +1372,7 @@ int Mobot_loadMelody(mobot_t* comms, mobotMelodyNote_t* melody)
                   printf("i %d ", i);
                   if (iter->next == NULL)
                   {
+                     inull = i;
                      while ( i <= size)
                      {
                          memcpy(&data[i*2+1], &nullnote[0], 2);
@@ -1383,6 +1385,9 @@ int Mobot_loadMelody(mobot_t* comms, mobotMelodyNote_t* melody)
                   printf("data %d \n", iter->notedata[0]);
 
 	  }
+          ms = (1000 * 60 *4 /(melody->tempo)/16)*(inull+1);
+          ns = ms * 1000;
+          printf("ms %d ns %d\n", ms, ns);
 	  data[2] = (uint8_t)i; //number of notes in each packet
           printf("\n");
 	  if ( bufready == 1) //send new chunk of melody only if the buffer is ready
@@ -1429,6 +1434,12 @@ int Mobot_loadMelody(mobot_t* comms, mobotMelodyNote_t* melody)
 		       else
 		       {
 			   bufready = 0; 
+                           #ifndef _WIN32
+                           usleep(1000000);
+                           #else
+                           Sleep(1000);
+                           #endif
+                           bufready = 1;
 			   break;
 		       }
 		   }
@@ -1448,9 +1459,9 @@ int Mobot_loadMelody(mobot_t* comms, mobotMelodyNote_t* melody)
 	  if ( id == (numpackets-1) ) //send message it's last chunck
 	  {
           #ifndef _WIN32
-               usleep(3000000);
+               usleep(ns);
            #else
-               Sleep(3000);
+               Sleep(ms);
            #endif
            status = 1;
 		  for(retries = 0; retries <= MAX_RETRIES && status != 0; retries++) 
