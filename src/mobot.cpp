@@ -1351,8 +1351,14 @@ int Mobot_loadMelody(mobot_t* comms, mobotMelodyNote_t* melody)
   iter = melody->next;
   //get the number of notes in the list
   for(length = 0; iter != NULL; length++, iter = iter->next);
+  length--;
+  printf("Length %d\n", length);
   //calculate the number of packets to send
-  numpackets = floor(length/(double)size) +1 ;
+  numpackets = floor(length/(double)size);
+  if (numpackets == 0) 
+  {
+     numpackets = 1;
+  }
   printf("numpackests = %d\n", numpackets);
   iter = melody->next;
   for (id = 0; id < numpackets; id++)
@@ -1370,7 +1376,7 @@ int Mobot_loadMelody(mobot_t* comms, mobotMelodyNote_t* melody)
           /*Build the packet*/
 	  for(i = 1; i <= size; i++) {
                   printf("i %d ", i);
-                  if (iter->next == NULL)
+                  if (iter->next == NULL || i == size)
                   {
                      inull = i;
                      while ( i <= size)
@@ -1385,7 +1391,8 @@ int Mobot_loadMelody(mobot_t* comms, mobotMelodyNote_t* melody)
                   printf("data %d \n", iter->notedata[0]);
 
 	  }
-          ms = (1000 * 60 *4 /(melody->tempo)/16)*(inull+1);
+          
+          ms = (1000* 60 *4 /(melody->tempo)/16)*(inull);
           ns = ms * 1000;
           printf("ms %d ns %d\n", ms, ns);
 	  data[2] = (uint8_t)i; //number of notes in each packet
@@ -1403,9 +1410,9 @@ int Mobot_loadMelody(mobot_t* comms, mobotMelodyNote_t* melody)
            else 
            {
           #ifndef _WIN32
-               usleep(2000000);
+               usleep(ns);
            #else
-               Sleep(2000);
+               Sleep(ms);
            #endif
             }
 	       //for(retries = 0; retries <= MAX_RETRIES && status != 0; retries++) 
@@ -1455,9 +1462,10 @@ int Mobot_loadMelody(mobot_t* comms, mobotMelodyNote_t* melody)
                       //printf("junk5\n");
 		 // 
 	   }
-
-	  if ( id == (numpackets-1) ) //send message it's last chunck
+          printf("id before stop %d\n", id);
+	  if ( id == (numpackets -1) ) //send message it's last chunck
 	  {
+          printf("sending stop\n");
           #ifndef _WIN32
                usleep(ns);
            #else

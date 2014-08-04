@@ -11,7 +11,7 @@ int main()
   mobotMelodyNote_t* head;
   int rc;
   Mobot_init(&mobot);
-  Mobot_connectWithAddress(&mobot, "61BZ", 1);
+  Mobot_connectWithAddress(&mobot, "GC6K", 1);
   //Mobot_connectWithTTY(&mobot, "/dev/ttyACM0");
   /*if(rc = Mobot_connectWithTTY(&mobot, "/dev/ttyACM0")) {
     printf("connection failed.\n");
@@ -35,14 +35,14 @@ int main()
   Mobot_melodyAddNote(head, "C", 16);
   Mobot_melodyAddNote(head, "E", 16);
   Mobot_melodyAddNote(head, "A5", 16);
+
   Mobot_melodyAddNote(head, "E", 16);
   Mobot_melodyAddNote(head, "C", 16);
   Mobot_melodyAddNote(head, "A", 16);
-
   Mobot_melodyAddNote(head, "E5", 16);
   Mobot_melodyAddNote(head, "D#5", 16);
   Mobot_melodyAddNote(head, "E5", 16);
-  /*Mobot_melodyAddNote(head, "D#5", 16);
+  Mobot_melodyAddNote(head, "D#5", 16);
   Mobot_melodyAddNote(head, "E5", 16);
   Mobot_melodyAddNote(head, "b4", 16);
   Mobot_melodyAddNote(head, "d5", 16);
@@ -52,7 +52,8 @@ int main()
   Mobot_melodyAddNote(head, "a3", 16);
   Mobot_melodyAddNote(head, "c4", 16);
   Mobot_melodyAddNote(head, "e4", 16);
-  Mobot_melodyAddNote(head, "a4", 16);
+  
+  /*Mobot_melodyAddNote(head, "a4", 16);
   Mobot_melodyAddNote(head, "b4", 16);
   Mobot_melodyAddNote(head, "e3", 16);
   Mobot_melodyAddNote(head, "g#3", 16);
@@ -68,6 +69,7 @@ int main()
   Mobot_melodyAddNote(head, "b4", 16);
   Mobot_melodyAddNote(head, "d5", 16);
   Mobot_melodyAddNote(head, "c5", 16);
+  
   Mobot_melodyAddNote(head, "a4", 16);
   Mobot_melodyAddNote(head, "E5", 16);
   Mobot_melodyAddNote(head, "D#5", 16);
@@ -78,21 +80,22 @@ int main()
   Mobot_melodyAddNote(head, "d5", 16);
   Mobot_melodyAddNote(head, "c5", 16);
   Mobot_melodyAddNote(head, "a4", 16);
-  
   Mobot_melodyAddNote(head, "e3", 16);
   Mobot_melodyAddNote(head, "a3", 16);
   Mobot_melodyAddNote(head, "e4", 16);*/
   
   printf("Hello!\n");
+  Mobot_moveNB(&mobot, 360, 0, -360, 0);
   Mobot_loadMelody(&mobot, head);
+  Mobot_stop(&mobot);
   //Mobot_loadMelody(child, 1, head);
   //Mobot_playMelody(&mobot, 1);
-#ifndef _WIN32
+/*#ifndef _WIN32
   usleep(2800000);
   usleep(2800000);
 #else
   Sleep(3200);
-#endif
+#endif*/
 
   /*head = Mobot_createMelody(120);
   Mobot_melodyAddNote(head, "E4", 16);
