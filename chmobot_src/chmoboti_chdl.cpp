@@ -2746,6 +2746,34 @@ EXPORTCH int LinkbotI_closeGripperNB_chdl(void *varg) {
     Ch_VaEnd(interp, ap);
     return retval;
 }
+
+EXPORTCH int LinkbotI_loadMelody_chdl(void *varg) {
+    ChInterp_t interp;
+    ChVaList_t ap;
+    class CLinkbotI *mobot;
+    int retval;
+
+    Ch_VaStart(interp, ap, varg);
+    mobot = Ch_VaArg(interp, ap, class CLinkbotI *);
+    retval = mobot->loadMelody();
+    Ch_VaEnd(interp, ap);
+    return retval;
+}
+
+EXPORTCH int LinkbotI_readMelody_chdl(void *varg) {
+    ChInterp_t interp;
+    ChVaList_t ap;
+    class CLinkbotI *mobot;
+	const char *filename;
+    int retval;
+
+    Ch_VaStart(interp, ap, varg);
+    mobot = Ch_VaArg(interp, ap, class CLinkbotI *);
+	filename = Ch_VaArg(interp, ap, const char *);
+    retval = mobot->readMelody(filename);
+    Ch_VaEnd(interp, ap);
+    return retval;
+}
 /* CLinkbotIGroup functions */
 
 EXPORTCH void CLinkbotIGroup_CLinkbotIGroup_chdl(void *varg) {

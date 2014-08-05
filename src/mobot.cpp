@@ -17,7 +17,7 @@
    along with BaroboLink.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#define COMMSDEBUG
+//#define COMMSDEBUG
 
 #include "logging.h"
 #ifdef _MSC_VER
@@ -1336,7 +1336,7 @@ int Mobot_loadMelody(mobot_t* comms, mobotMelodyNote_t* melody)
   uint8_t length;
   uint8_t nullnote[2]; //null note to fill up incomplete buffer
   int id, numpackets, i, slot, inull;
-  int numslots = 3; //(numslots +1 = number of slots in the EEPROM memory) 
+  int numslots = 3; //(numslots = number of slots in the EEPROM memory) 
   int size = 15; //number of notes in each packet. Fill 32 bytes. Each note is 2 bytes
   int status = 1;
   int retries;
@@ -1364,39 +1364,38 @@ int Mobot_loadMelody(mobot_t* comms, mobotMelodyNote_t* melody)
   for (id = 0; id < numpackets; id++)
   {
 	  printf("id %d\n", (uint8_t)id);
-          //printf("i %d ", i);
-          //i = 1;
-          data[0] = (uint8_t)id;
+      data[0] = (uint8_t)id;
 	  data[1] = melody->tempo;
-	  //data[2] = size; //number of notes in each packet
 	  if (id == 0)
 	  {
 		  iter = melody->next; //reset only the first time
 	  }
           /*Build the packet*/
-	  for(i = 1; i <= size; i++) {
-                  printf("i %d ", i);
-                  if (iter->next == NULL || i == size)
-                  {
-                     inull = i;
-                     while ( i <= size)
-                     {
-                         memcpy(&data[i*2+1], &nullnote[0], 2);
-                         i++;
-                     }
-                     break;
-                  }
-		  memcpy(&data[i*2+1], &iter->notedata[0], 2);
-		  iter = iter->next;
-                  printf("data %d \n", iter->notedata[0]);
+	  for(i = 1; i <= size; i++) 
+	  {
+		  printf("i %d ", i);
+          if (iter->next == NULL || i == size)
+          {
+			  inull = i;
+              while ( i <= size)
+              {
+				  memcpy(&data[i*2+1], &nullnote[0], 2);
+                  i++;
+              }
+              break;
+           }
+		   memcpy(&data[i*2+1], &iter->notedata[0], 2);
+		   iter = iter->next;
+           //printf("data %d \n", iter->notedata[0]);
 
 	  }
-          
-          ms = (1000* 60 *4 /(melody->tempo)/16)*(inull);
-          ns = ms * 1000;
-          printf("ms %d ns %d\n", ms, ns);
+      
+	  /*Calculate duration of the packet*/
+      ms = (1000* 60 *4 /(melody->tempo)/16)*(inull);
+      ns = ms * 1000;
+      printf("ms %d ns %d\n", ms, ns);
 	  data[2] = (uint8_t)i; //number of notes in each packet
-          printf("\n");
+      printf("\n");
 	  if ( bufready == 1) //send new chunk of melody only if the buffer is ready
 	  {
           if ( id == 0)
@@ -1415,39 +1414,37 @@ int Mobot_loadMelody(mobot_t* comms, mobotMelodyNote_t* melody)
                Sleep(ms);
            #endif
             }
-	       //for(retries = 0; retries <= MAX_RETRIES && status != 0; retries++) 
 	       for(retries = 0; retries <= MAX_RETRIES ; retries++) 
 		   {
-                           printf("inside\n");
+               printf("inside\n");
 			   SendToIMobot(comms, BTCMD(CMD_LOADMELODY), data, i*2+2);
-                           printf("i sent= %d\n",(i*2+2));
-          #ifndef _WIN32
+               printf("i sent= %d\n",(i*2+2));
+               #ifndef _WIN32
                usleep(100000);
-           #else
+               #else
                Sleep(100);
-           #endif
+               #endif
                status = RecvFromIMobot(comms, (uint8_t*)recvBuf, sizeof(recvBuf));
 			    /* Make sure there is space in the buffer */
-			  // memcpy(&slot, &recvBuf[2], 4);
-           printf("packet %d sent\n", id);
-           printf("slot %d\n", recvBuf[7]);
-           printf("status %d\n", status);
-           slot = id;
+               printf("packet %d sent\n", id);
+               printf("slot %d\n", recvBuf[7]);
+               printf("status %d\n", status);
+               slot = id;
                if(slot < numslots)
 		       {
-			   bufready = 1;
-			   break;
+			       bufready = 1;
+			       break;
 		       }
 		       else
 		       {
-			   bufready = 0; 
-                           #ifndef _WIN32
-                           usleep(1000000);
-                           #else
-                           Sleep(1000);
-                           #endif
-                           bufready = 1;
-			   break;
+			       bufready = 0; 
+                   #ifndef _WIN32
+                   usleep(1000000);
+                   #else
+                   Sleep(1000);
+                   #endif
+                   bufready = 1;
+			       break;
 		       }
 		   }
 	  }
@@ -1459,7 +1456,7 @@ int Mobot_loadMelody(mobot_t* comms, mobotMelodyNote_t* melody)
 		  {*/
 		      buf[0] = 1;
 	              status = MobotMsgTransaction(comms, BTCMD(CMD_MELODYINIT), buf, 1);
-                      //printf("junk5\n");
+                  
 		 // 
 	   }
           printf("id before stop %d\n", id);
@@ -1510,6 +1507,62 @@ int Mobot_loadMelody(mobot_t* comms, mobotMelodyNote_t* melody)
   return status;
 }
 
+/*Read melody from a file and build the linked list*/
+mobotMelodyNote_t * Mobot_readMelody(mobot_t* comms, const char *filename)
+{
+	int i=0, out;
+	int totnum=0;
+	char note[10], line[40], file[200];
+	int divider;
+	int tempo;
+	FILE *fp=NULL;
+	mobotMelodyNote_t * head=NULL;
+	
+	const char *names[3]={"C:/Users/aless_000/melody1", "C:/Users/aless_000/melody2", "C:/Users/aless_000/melody3"};
+	/*find if the corresponding file exists*/
+	while (out != 0)
+    {
+			out = strcmp(names[i], filename);
+		    i++;
+		    if (i >= 3)
+		    {
+			printf("No match found. Exit\n");
+			exit(-1);
+		    }
+	}
+	/*Build the path... to fix with the real path*/
+    //strcpy(file, "./");
+	strcat(file,filename);
+	strcat(file, ".txt");
+	fp=fopen(file, "r");
+	if (fp == NULL)
+	{
+		printf("Error: cannot open file\n");
+		exit(-1);
+	}
+	/*initalize list*/
+	head = (mobotMelodyNote_t *)malloc(sizeof(mobotMelodyNote_t));
+	head->next = NULL;
+	fgets(line,40, fp);
+	sscanf(line, "%d", &head->tempo);
+    while(!feof(fp))
+    {
+		   totnum++;
+		   fgets(line, 40, fp);
+	}
+	rewind(fp);
+	fgets(line, 40, fp);
+	/*read the notes line by line from the file*/
+	for (i=0; i<totnum; i++)
+	{
+		fgets(line, 40, fp);
+		sscanf(line, "%s%d", &note, &divider);
+		Mobot_melodyAddNote(head, note, divider);
+		
+	}
+	fclose(fp);
+	return head;
+}
 
 int Mobot_playMelody(mobot_t* comms, int id)
 {

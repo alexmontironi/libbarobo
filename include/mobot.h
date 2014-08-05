@@ -951,12 +951,17 @@ class DLLIMPORT CMobot
 	virtual int closeGripper(void);
 	virtual int closeGripperNB(void);
 
+	/*melody functions*/
+	virtual int readMelody(const char *filename);
+	virtual int loadMelody();
+
     virtual int systemTime(double &time);
     int transactMessage(int cmd, void* buf, int size);
   protected:
     int getJointDirection(robotJointId_t id, robotJointState_t &dir);
     int setJointDirection(robotJointId_t id, robotJointState_t dir);
     mobot_t *_comms;
+	mobotMelodyNote_t * _head;
     void (*buttonCallback)(CMobot *mobot, int button, int buttonDown);
 };
 #endif
@@ -1239,9 +1244,9 @@ DLLIMPORT int Mobot_enableJointEventCallback(mobot_t* comms, void* data,
 DLLIMPORT int Mobot_findMobot(mobot_t* parent, const char* childSerialID);
 DLLIMPORT mobotMelodyNote_t* Mobot_createMelody(int tempo);
 DLLIMPORT int Mobot_melodyAddNote(mobotMelodyNote_t* melody, const char* note, int divider);
-//DLLIMPORT int Mobot_loadMelody(mobot_t* comms, int id, mobotMelodyNote_t* melody);
 DLLIMPORT int Mobot_loadMelody(mobot_t* comms, mobotMelodyNote_t* melody);
 DLLIMPORT int Mobot_playMelody(mobot_t* comms, int id);
+DLLIMPORT mobotMelodyNote_t * Mobot_readMelody(mobot_t* comms, const char *filename);
 DLLIMPORT int Mobot_getAddress(mobot_t* comms);
 DLLIMPORT mobot_t* Mobot_getDongle();
 DLLIMPORT int Mobot_queryAddresses(mobot_t* comms);

@@ -285,6 +285,37 @@ int CMobot::flashFirmwareAsync (std::string hexfile,
   return Mobot_flashFirmwareAsync(_comms, hexfile.c_str(), progressCallback, completionCallback, user_data);
 }
 
+/*Melody functions in class CMobot*/
+int CMobot::readMelody(const char *filename)
+{
+	_head = Mobot_readMelody(_comms, filename);
+	if (_head == NULL)
+	{
+		return -1;
+	}
+	else
+	{
+		return 0;
+	}
+}
+
+int CMobot::loadMelody()
+{
+	mobotMelodyNote_t *iter, *next;
+	Mobot_loadMelody(_comms, _head);
+
+	/*Free..*/
+	for(iter = _head; iter != NULL; iter = next)
+    {
+    next = iter->next;
+    free(iter);
+    }
+	return 0;
+
+}
+
+
+
 /* CMelody */
 CMelody::CMelody()
 {
