@@ -1354,7 +1354,7 @@ int Mobot_loadMelody(mobot_t* comms, mobotMelodyNote_t* melody)
   length--;
   printf("Length %d\n", length);
   //calculate the number of packets to send
-  numpackets = floor(length/(double)size);
+  numpackets = floor((length/(double)size)+0.5);
   if (numpackets == 0) 
   {
      numpackets = 1;
@@ -1363,6 +1363,9 @@ int Mobot_loadMelody(mobot_t* comms, mobotMelodyNote_t* melody)
   iter = melody->next;
   for (id = 0; id < numpackets; id++)
   {
+	  /*zero the duration of the packet*/
+	  ms = 0;
+	  ns = 0;
 	  printf("id %d\n", (uint8_t)id);
       data[0] = (uint8_t)id;
 	  data[1] = melody->tempo;
@@ -1373,7 +1376,7 @@ int Mobot_loadMelody(mobot_t* comms, mobotMelodyNote_t* melody)
           /*Build the packet*/
 	  for(i = 1; i <= size; i++) 
 	  {
-		  printf("i %d ", i);
+		  printf("i %d ", iter->notedata[0]);
           if (iter->next == NULL || i == size)
           {
 			  inull = i;
@@ -1386,12 +1389,11 @@ int Mobot_loadMelody(mobot_t* comms, mobotMelodyNote_t* melody)
            }
 		   memcpy(&data[i*2+1], &iter->notedata[0], 2);
 		   iter = iter->next;
+		   /*Calculate recursively the duration of the packet*/
+		   ms += (1000* 60* 4/(melody->tempo)/iter->notedata[0]);
            //printf("data %d \n", iter->notedata[0]);
 
 	  }
-      
-	  /*Calculate duration of the packet*/
-      ms = (1000* 60 *4 /(melody->tempo)/16)*(inull);
       ns = ms * 1000;
       printf("ms %d ns %d\n", ms, ns);
 	  data[2] = (uint8_t)i; //number of notes in each packet
@@ -1481,11 +1483,10 @@ int Mobot_loadMelody(mobot_t* comms, mobotMelodyNote_t* melody)
 	   }
 
 	  /*poll to check when there is a free slot in memory in the Linkbot*/
-	  while ( bufready == 0)
+	  /*while ( bufready == 0)
 	  {
 		  status = MobotMsgTransaction(comms, BTCMD(CMD_GETMELODYSLOT), buf, 0);
 		  memcpy(&slot, &buf[2], 4);
-		   /* Make sure there is space in the buffer */
            if(slot < numslots)
 		   {
 		       bufready = 1;
@@ -1502,7 +1503,7 @@ int Mobot_loadMelody(mobot_t* comms, mobotMelodyNote_t* melody)
                Sleep(500);
                #endif
 		    }
-	  }
+	  }*/
   }
   return status;
 }
@@ -1512,17 +1513,20 @@ mobotMelodyNote_t * Mobot_readMelody(mobot_t* comms, const char *filename)
 {
 	int i=0, out;
 	int totnum=0;
-	char note[10], line[40], file[200];
+	char note[10], line[40];
 	int divider;
 	int tempo;
 	FILE *fp=NULL;
 	mobotMelodyNote_t * head=NULL;
-	
-	const char *names[3]={"C:/Users/aless_000/melody1", "C:/Users/aless_000/melody2", "C:/Users/aless_000/melody3"};
+	char file[200] = "C:/Ch/package/chbarobo/melodies/";
+	strcat(file,filename);
+
+	const char *names[3]={"C:/Ch/package/chbarobo/melodies/melody1", "C:/Ch/package/chbarobo/melodies/melody2", 
+		                  "C:/Ch/package/chbarobo/melodies/melody3"};
 	/*find if the corresponding file exists*/
 	while (out != 0)
     {
-			out = strcmp(names[i], filename);
+			out = strcmp(names[i], file);
 		    i++;
 		    if (i >= 3)
 		    {
@@ -1532,7 +1536,7 @@ mobotMelodyNote_t * Mobot_readMelody(mobot_t* comms, const char *filename)
 	}
 	/*Build the path... to fix with the real path*/
     //strcpy(file, "./");
-	strcat(file,filename);
+	
 	strcat(file, ".txt");
 	fp=fopen(file, "r");
 	if (fp == NULL)
