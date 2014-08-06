@@ -1305,7 +1305,7 @@ int Mobot_loadMelody(mobot_t* comms, mobotMelodyNote_t* melody)
   uint8_t nullnote[2]; //null note to fill up incomplete buffer
   int id, numpackets, i, slot, inull;
   int numslots = 3; //number of slots in the EEPROM memory 
-  int size = 64; //number of notes in each packet. 
+  int size = 64; //number of notes in each packet.
   int status = 1;
   int retries;
   int bufready = 1; //flag to know when to send new data. 1 means it's ok to send.
@@ -1332,7 +1332,15 @@ int Mobot_loadMelody(mobot_t* comms, mobotMelodyNote_t* melody)
 	  /*zero the duration of the packet*/
 	  ms = 0;
 	  us = 0;
-      data[0] = (uint8_t)id;
+	  if (id >= 3)
+	  {
+		  data[0] = (uint8_t)(3 - id);
+	  }
+	  else
+	  {
+		  data[0] = (uint8_t)id;
+	  }
+
 	  data[1] = melody->tempo;
 	  if (id == 0)
 	  {
