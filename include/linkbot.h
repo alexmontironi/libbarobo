@@ -457,7 +457,7 @@ class CLinkbotI
 
 	/*Melody functions*/
 	int loadMelody(void);
-	int readMelody(const char *filename);
+	int readMelody(const char *filename, ...);
 
   private:
     void* memholder1;
@@ -764,7 +764,7 @@ class CLinkbotL
 
 	/*Melody functions*/
 	int loadMelody(void);
-	int readMelody(const char *filename);
+	int readMelody(const char *filename, ...);
 
   private:
     void* memholder1;

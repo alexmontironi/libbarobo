@@ -2174,12 +2174,18 @@ EXPORTCH int LinkbotL_readMelody_chdl(void *varg) {
     ChVaList_t ap;
     class CLinkbotL *mobot;
 	const char *filename;
+	int fromCh;
     int retval;
 
     Ch_VaStart(interp, ap, varg);
     mobot = Ch_VaArg(interp, ap, class CLinkbotL *);
 	filename = Ch_VaArg(interp, ap, const char *);
-    retval = mobot->readMelody(filename);
+	if(Ch_VaCount(interp, ap) == 1) {
+		fromCh = Ch_VaArg(interp, ap, int);
+		retval = mobot->readMelody(filename, fromCh);
+	}else{
+		retval = mobot->readMelody(filename);
+	}
     Ch_VaEnd(interp, ap);
     return retval;
 }

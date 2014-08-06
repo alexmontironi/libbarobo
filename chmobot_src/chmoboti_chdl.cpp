@@ -2765,15 +2765,22 @@ EXPORTCH int LinkbotI_readMelody_chdl(void *varg) {
     ChVaList_t ap;
     class CLinkbotI *mobot;
 	const char *filename;
+	int fromCh;
     int retval;
 
     Ch_VaStart(interp, ap, varg);
     mobot = Ch_VaArg(interp, ap, class CLinkbotI *);
 	filename = Ch_VaArg(interp, ap, const char *);
-    retval = mobot->readMelody(filename);
+	if(Ch_VaCount(interp, ap) == 1) {
+		fromCh = Ch_VaArg(interp, ap, int);
+		retval = mobot->readMelody(filename, fromCh);
+	}else{
+		retval = mobot->readMelody(filename);
+	}
     Ch_VaEnd(interp, ap);
     return retval;
 }
+
 /* CLinkbotIGroup functions */
 
 EXPORTCH void CLinkbotIGroup_CLinkbotIGroup_chdl(void *varg) {

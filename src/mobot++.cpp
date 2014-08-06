@@ -286,9 +286,20 @@ int CMobot::flashFirmwareAsync (std::string hexfile,
 }
 
 /*Melody functions in class CMobot*/
-int CMobot::readMelody(const char *filename)
+int CMobot::readMelody(const char *filename, int fromCh)
 {
-	_head = Mobot_readMelody(_comms, filename);
+	/*not from Ch*/
+	if(fromCh == 0)
+	{
+		/*If calling the C library, the user needs to specify the full path*/
+		_head = Mobot_readMelody(_comms, filename);
+	}
+	/*from Ch*/
+	else
+	{
+		_head = Mobot_readMelody(_comms, filename);
+	}
+
 	if (_head == NULL)
 	{
 		return -1;

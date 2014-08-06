@@ -1298,51 +1298,19 @@ int Mobot_melodyAddNote(mobotMelodyNote_t* melody, const char* note, int divider
   return 0;
 }
 
-/*int Mobot_loadMelody(mobot_t* comms, int id, mobotMelodyNote_t* melody)
-{
-  uint8_t data[256];
-  uint8_t length;
-  int status = 1;
-  int retries;
-  int recvBuf[16];
-  mobotMelodyNote_t* iter;
-  iter = melody->next;
-  for(length = 0; iter != NULL; length++, iter = iter->next);
-  data[0] = (uint8_t)id;
-  data[1] = melody->tempo;
-  data[2] = length;
-  iter = melody->next;
-  for(length = 1; iter != NULL; length++, iter = iter->next) {
-    memcpy(&data[length*2+1], &iter->notedata[0], 2);
-  }
-  for(retries = 0; retries <= MAX_RETRIES && status != 0; retries++) {
-    SendToIMobot(comms, BTCMD(CMD_LOADMELODY), data, length*2+1);
-#ifndef _WIN32
-    usleep(500000);
-#else
-    Sleep(500);
-#endif
-    status = RecvFromIMobot(comms, (uint8_t*)recvBuf, sizeof(recvBuf));
-  }
-  /* Make sure the data size is correct 
-  if(recvBuf[1] != 3) {
-    return -1;
-  }
-  return status;
-}*/
 int Mobot_loadMelody(mobot_t* comms, mobotMelodyNote_t* melody)
 {
   uint8_t data[256], buf[64];
   uint8_t length;
   uint8_t nullnote[2]; //null note to fill up incomplete buffer
   int id, numpackets, i, slot, inull;
-  int numslots = 3; //(numslots = number of slots in the EEPROM memory) 
-  int size = 15; //number of notes in each packet. Fill 32 bytes. Each note is 2 bytes
+  int numslots = 3; //number of slots in the EEPROM memory 
+  int size = 64; //number of notes in each packet. 
   int status = 1;
   int retries;
   int bufready = 1; //flag to know when to send new data. 1 means it's ok to send.
-  int recvBuf[16];
-  unsigned long ms=0, ns=0;
+  int recvBuf[256]; 
+  unsigned long ms=0, us=0;
 
   nullnote[0] = 0;
   nullnote[1] = 0;
@@ -1352,21 +1320,18 @@ int Mobot_loadMelody(mobot_t* comms, mobotMelodyNote_t* melody)
   //get the number of notes in the list
   for(length = 0; iter != NULL; length++, iter = iter->next);
   length--;
-  printf("Length %d\n", length);
   //calculate the number of packets to send
   numpackets = floor((length/(double)size)+0.5);
   if (numpackets == 0) 
   {
      numpackets = 1;
   }
-  printf("numpackests = %d\n", numpackets);
   iter = melody->next;
   for (id = 0; id < numpackets; id++)
   {
 	  /*zero the duration of the packet*/
 	  ms = 0;
-	  ns = 0;
-	  printf("id %d\n", (uint8_t)id);
+	  us = 0;
       data[0] = (uint8_t)id;
 	  data[1] = melody->tempo;
 	  if (id == 0)
@@ -1376,7 +1341,6 @@ int Mobot_loadMelody(mobot_t* comms, mobotMelodyNote_t* melody)
           /*Build the packet*/
 	  for(i = 1; i <= size; i++) 
 	  {
-		  printf("i %d ", iter->notedata[0]);
           if (iter->next == NULL || i == size)
           {
 			  inull = i;
@@ -1391,13 +1355,10 @@ int Mobot_loadMelody(mobot_t* comms, mobotMelodyNote_t* melody)
 		   iter = iter->next;
 		   /*Calculate recursively the duration of the packet*/
 		   ms += (1000* 60* 4/(melody->tempo)/iter->notedata[0]);
-           //printf("data %d \n", iter->notedata[0]);
 
 	  }
-      ns = ms * 1000;
-      printf("ms %d ns %d\n", ms, ns);
+      us = ms * 1000;
 	  data[2] = (uint8_t)i; //number of notes in each packet
-      printf("\n");
 	  if ( bufready == 1) //send new chunk of melody only if the buffer is ready
 	  {
           if ( id == 0)
@@ -1411,26 +1372,21 @@ int Mobot_loadMelody(mobot_t* comms, mobotMelodyNote_t* melody)
            else 
            {
           #ifndef _WIN32
-               usleep(ns);
+               usleep(us);
            #else
                Sleep(ms);
            #endif
             }
+		  /*Send the packet of notes*/
 	       for(retries = 0; retries <= MAX_RETRIES ; retries++) 
 		   {
-               printf("inside\n");
 			   SendToIMobot(comms, BTCMD(CMD_LOADMELODY), data, i*2+2);
-               printf("i sent= %d\n",(i*2+2));
                #ifndef _WIN32
                usleep(100000);
                #else
                Sleep(100);
                #endif
                status = RecvFromIMobot(comms, (uint8_t*)recvBuf, sizeof(recvBuf));
-			    /* Make sure there is space in the buffer */
-               printf("packet %d sent\n", id);
-               printf("slot %d\n", recvBuf[7]);
-               printf("status %d\n", status);
                slot = id;
                if(slot < numslots)
 		       {
@@ -1450,23 +1406,17 @@ int Mobot_loadMelody(mobot_t* comms, mobotMelodyNote_t* melody)
 		       }
 		   }
 	  }
-      printf("bufready = %d\n", bufready);
       if ( id == 0) //initialize melody in the firmware when the first packet is sent
       {
-             //printf("Junk3\n");
-             /*for(retries = 0; retries <= MAX_RETRIES && status != 0; retries++) 
-		  {*/
-		      buf[0] = 1;
-	              status = MobotMsgTransaction(comms, BTCMD(CMD_MELODYINIT), buf, 1);
-                  
-		 // 
+			  buf[0] = 1;
+	          status = MobotMsgTransaction(comms, BTCMD(CMD_MELODYINIT), buf, 1);
+
 	   }
-          printf("id before stop %d\n", id);
+   
 	  if ( id == (numpackets -1) ) //send message it's last chunck
 	  {
-          printf("sending stop\n");
           #ifndef _WIN32
-               usleep(ns);
+               usleep(us);
            #else
                Sleep(ms);
            #endif
@@ -1475,35 +1425,10 @@ int Mobot_loadMelody(mobot_t* comms, mobotMelodyNote_t* melody)
 		  {
 		      buf[0] = 1;
 		      status = MobotMsgTransaction(comms, BTCMD(CMD_STOPMELODY), buf, 1);
-                      printf("retries %d\n", retries);
+                    
 		  }
-                  printf("stop sent\n");
-                  printf("stop status %d\n", status);
-                  return status;
-	   }
-
-	  /*poll to check when there is a free slot in memory in the Linkbot*/
-	  /*while ( bufready == 0)
-	  {
-		  status = MobotMsgTransaction(comms, BTCMD(CMD_GETMELODYSLOT), buf, 0);
-		  memcpy(&slot, &buf[2], 4);
-           if(slot < numslots)
-		   {
-		       bufready = 1;
-			   id --; //need to resend the same packet
-			   break;
-		    }
-		    else
-		    {
-			   bufready = 0; 
-			   //wait
-			   #ifndef _WIN32
-               usleep(500000);
-               #else
-               Sleep(500);
-               #endif
-		    }
-	  }*/
+		  return status;
+	  }
   }
   return status;
 }
@@ -1518,27 +1443,8 @@ mobotMelodyNote_t * Mobot_readMelody(mobot_t* comms, const char *filename)
 	int tempo;
 	FILE *fp=NULL;
 	mobotMelodyNote_t * head=NULL;
-	char file[200] = "C:/Ch/package/chbarobo/melodies/";
-	strcat(file,filename);
 
-	const char *names[3]={"C:/Ch/package/chbarobo/melodies/melody1", "C:/Ch/package/chbarobo/melodies/melody2", 
-		                  "C:/Ch/package/chbarobo/melodies/melody3"};
-	/*find if the corresponding file exists*/
-	while (out != 0)
-    {
-			out = strcmp(names[i], file);
-		    i++;
-		    if (i >= 3)
-		    {
-			printf("No match found. Exit\n");
-			exit(-1);
-		    }
-	}
-	/*Build the path... to fix with the real path*/
-    //strcpy(file, "./");
-	
-	strcat(file, ".txt");
-	fp=fopen(file, "r");
+	fp=fopen(filename, "r");
 	if (fp == NULL)
 	{
 		printf("Error: cannot open file\n");
