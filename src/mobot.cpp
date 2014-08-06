@@ -1479,6 +1479,7 @@ int Mobot_playMelody(mobot_t* comms, int id)
   int status;
   uint8_t buf[8];
   buf[0] = (uint8_t)id;
+  DEPRECATED("Mobot_playMelody", "Mobot_loadMelody");
   status = MobotMsgTransaction(comms, BTCMD(CMD_PLAYMELODY), buf, 1);
   if(status < 0) return status;
   /* Make sure the buf size is correct */
