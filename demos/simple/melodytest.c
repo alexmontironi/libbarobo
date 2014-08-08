@@ -17,7 +17,7 @@ int main()
     printf("connection failed.\n");
     exit(-1);
   }*/
-  head = Mobot_createMelody(50);
+  head = Mobot_createMelody(30);
   
   Mobot_melodyAddNote(head, "A", 16);
   Mobot_melodyAddNote(head, "C", 16);
@@ -53,7 +53,7 @@ int main()
   Mobot_melodyAddNote(head, "c4", 16);
   Mobot_melodyAddNote(head, "e4", 16);
   
-  /*Mobot_melodyAddNote(head, "a4", 16);
+  Mobot_melodyAddNote(head, "a4", 16);
   Mobot_melodyAddNote(head, "b4", 16);
   Mobot_melodyAddNote(head, "e3", 16);
   Mobot_melodyAddNote(head, "g#3", 16);
@@ -82,7 +82,7 @@ int main()
   Mobot_melodyAddNote(head, "a4", 16);
   Mobot_melodyAddNote(head, "e3", 16);
   Mobot_melodyAddNote(head, "a3", 16);
-  Mobot_melodyAddNote(head, "e4", 16);*/
+  Mobot_melodyAddNote(head, "e4", 16);
   
   printf("Hello!\n");
   Mobot_moveNB(&mobot, 360, 0, -360, 0);
