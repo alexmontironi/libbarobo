@@ -2190,6 +2190,21 @@ EXPORTCH int LinkbotL_readMelody_chdl(void *varg) {
     return retval;
 }
 
+EXPORTCH int LinkbotL_playMelody_chdl(void *varg) {
+    ChInterp_t interp;
+    ChVaList_t ap;
+    class CLinkbotL *mobot;
+	const char *filename;
+    int retval;
+
+    Ch_VaStart(interp, ap, varg);
+    mobot = Ch_VaArg(interp, ap, class CLinkbotL *);
+	filename = Ch_VaArg(interp, ap, const char *);
+	retval = mobot->playMelody(filename);
+    Ch_VaEnd(interp, ap);
+    return retval;
+}
+
 /* CLinkbotLGroup functions */
 
 EXPORTCH void CLinkbotLGroup_CLinkbotLGroup_chdl(void *varg) {

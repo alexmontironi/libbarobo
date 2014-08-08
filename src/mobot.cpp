@@ -1305,7 +1305,7 @@ int Mobot_loadMelody(mobot_t* comms, mobotMelodyNote_t* melody)
   uint8_t nullnote[2]; //null note to fill up incomplete buffer
   int id, numpackets, i, slot, inull;
   int numslots = 3; //number of slots in the EEPROM memory 
-  int size = 64; //number of notes in each packet.
+  int size = 40; //number of notes in each packet. 64
   int status = 1;
   int retries;
   int bufready = 1; //flag to know when to send new data. 1 means it's ok to send.
@@ -1390,9 +1390,9 @@ int Mobot_loadMelody(mobot_t* comms, mobotMelodyNote_t* melody)
 		   {
 			   SendToIMobot(comms, BTCMD(CMD_LOADMELODY), data, i*2+2);
                #ifndef _WIN32
-               usleep(100000);
+               usleep(1000000);
                #else
-               Sleep(100);
+               Sleep(1000);
                #endif
                status = RecvFromIMobot(comms, (uint8_t*)recvBuf, sizeof(recvBuf));
                slot = id;
@@ -1449,14 +1449,29 @@ mobotMelodyNote_t * Mobot_readMelody(mobot_t* comms, const char *filename)
 	char note[10], line[40];
 	int divider;
 	int tempo;
+	char temp[100];
+	char *token, *prevtoken;
+	char *delimit = "/";
 	FILE *fp=NULL;
 	mobotMelodyNote_t * head=NULL;
-
-	fp=fopen(filename, "r");
-	if (fp == NULL)
+    
+	fp=fopen(filename, "rb");
+	if (fp == 0000000000000000 || fp == NULL)
 	{
-		printf("Error: cannot open file\n");
-		exit(-1);
+		/*Look fot the file in the current directory*/
+		strcpy(temp, filename);
+		token = strtok(temp, delimit);
+		while(token != 0000000000000000 || fp !=NULL)
+		{
+			prevtoken = token;
+			token = strtok(NULL, delimit);
+		}
+        fp=fopen(prevtoken, "rb");
+		if (fp == 0000000000000000 || fp ==NULL)
+		{
+			printf("Error: cannot open file\n");
+			exit(-1);
+		}
 	}
 	/*initalize list*/
 	head = (mobotMelodyNote_t *)malloc(sizeof(mobotMelodyNote_t));
@@ -1476,6 +1491,7 @@ mobotMelodyNote_t * Mobot_readMelody(mobot_t* comms, const char *filename)
 		fgets(line, 40, fp);
 		sscanf(line, "%s%d", &note, &divider);
 		Mobot_melodyAddNote(head, note, divider);
+		
 		
 	}
 	fclose(fp);

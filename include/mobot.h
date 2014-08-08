@@ -952,6 +952,7 @@ class DLLIMPORT CMobot
 	virtual int closeGripperNB(void);
 
 	/*melody functions*/
+	virtual int playMelody(const char *filename);
 	virtual int readMelody(const char *filename, int fromCh = 1);
 	virtual int loadMelody();
 
