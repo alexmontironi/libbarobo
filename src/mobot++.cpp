@@ -303,9 +303,10 @@ int CMobot::playMelody(const char *filename)
 	/*Probably not a full path*/
 	if (begin != 1)
 	{
-		printf("Warning: full path not specified. File assumed in the current working directory.\n");	
+		printf("Warning: full path not specified. File assumed in the current working directory.\n");
+		strcpy(path, "./");
 	}
-	strcpy(path, filename);
+	strcat(path, filename);
 	strcpy(temp,filename);
 	pt = strstr(temp, ending);
 	if (pt == NULL)
