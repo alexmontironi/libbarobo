@@ -456,10 +456,7 @@ class CLinkbotI
 	int closeGripperNB(void);
 
 	/*Melody functions*/
-	int loadMelody(void);
 	int playMelody(const char *filename);
-	int readMelody(const char *filename, ...);
-	
 
   private:
     void* memholder1;
@@ -765,9 +762,7 @@ class CLinkbotL
 	int closeGripperNB(void);
 
 	/*Melody functions*/
-	int loadMelody(void);
 	int playMelody(const char *filename);
-	int readMelody(const char *filename, ...);
 
   private:
     void* memholder1;

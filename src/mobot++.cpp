@@ -331,50 +331,6 @@ int CMobot::playMelody(const char *filename)
 }
 
 
-
-
-
-int CMobot::readMelody(const char *filename, int fromCh)
-{
-	/*not from Ch*/
-	if(fromCh == 0)
-	{
-		/*If calling the C library, the user needs to specify the full path*/
-		_head = Mobot_readMelody(_comms, filename);
-	}
-	/*from Ch*/
-	else
-	{
-		_head = Mobot_readMelody(_comms, filename);
-	}
-
-	if (_head == NULL)
-	{
-		return -1;
-	}
-	else
-	{
-		return 0;
-	}
-}
-
-int CMobot::loadMelody()
-{
-	mobotMelodyNote_t *iter, *next;
-	Mobot_loadMelody(_comms, _head);
-
-	/*Free..*/
-	for(iter = _head; iter != NULL; iter = next)
-    {
-    next = iter->next;
-    free(iter);
-    }
-	return 0;
-
-}
-
-
-
 /* CMelody */
 CMelody::CMelody()
 {

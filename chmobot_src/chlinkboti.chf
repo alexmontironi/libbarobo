@@ -2391,45 +2391,6 @@ int CLinkbotI::drivexyToNB(double x, double y, double radius, double trackwidth)
     return retval;
 }
 
-int CLinkbotI::loadMelody() {
-    void *fptr;
-    int retval;
-
-    fptr = dlsym(CMobot::g_chmobot_dlhandle, "LinkbotI_loadMelody_chdl");
-    if(fptr == NULL) {
-        fprintf(_stderr, "Error: %s(): dlsym(): %s\n", __func__,  dlerror());
-        return -1;
-    }
-    dlrunfun(fptr, &retval, NULL, this);
-    return retval;
-}
-int CLinkbotI::readMelody(const char *filename, ...) {
-    void *fptr;
-    int retval;
-    va_list ap;
-    int fromCh;
-    va_start(ap, filename);
-    char path[200];
-
-    fptr = dlsym(CMobot::g_chmobot_dlhandle, "LinkbotI_readMelody_chdl");
-    if(fptr == NULL) {
-        fprintf(_stderr, "Error: %s(): dlsym(): %s\n", __func__,  dlerror());
-        return -1;
-    }
-    if(va_count(ap) ==1) {
-        fromCh = va_arg(ap, int);
-        dlrunfun(fptr, &retval, NULL, this, filename, fromCh);
-    }else{
-        strcpy(path,getenv("CHHOME"));
-        strcat(path,"/package/chbarobo/melody/");
-        strcat(path,filename);
-        strcat(path,".txt");
-        dlrunfun(fptr, &retval, NULL, this, path);
-    }
-        
-    return retval;
-}
-
 int CLinkbotI::playMelody(const char *filename) {
     void *fptr;
     int retval;

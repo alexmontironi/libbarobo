@@ -953,8 +953,6 @@ class DLLIMPORT CMobot
 
 	/*melody functions*/
 	virtual int playMelody(const char *filename);
-	virtual int readMelody(const char *filename, int fromCh = 1);
-	virtual int loadMelody();
 
     virtual int systemTime(double &time);
     int transactMessage(int cmd, void* buf, int size);
