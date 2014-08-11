@@ -288,7 +288,6 @@ int CMobot::flashFirmwareAsync (std::string hexfile,
 /*Melody functions in class CMobot*/
 int CMobot::playMelody(const char *filename)
 {
-<<<<<<< HEAD
 	char path[100], temp[100];
 	char *root = ":";
 	char *divider = "/";
@@ -322,41 +321,6 @@ int CMobot::playMelody(const char *filename)
 	}
 	/*Play the melody*/
 	Mobot_loadMelody(_comms, _head);
-=======
-	char path[100], temp[100];
-	char *root = ":";
-	char *divider = "/";
-	char *ending = ".mld";
-	char *pt;
-	int len;
-	int begin, div;
-	mobotMelodyNote_t *iter, *next;
-
-    /*Build the path*/
-	len=strlen(filename);
-	begin=strcspn(filename, root);
-	/*Probably not a full path*/
-	if (begin != 1)
-	{
-		printf("Warning: full path not specified. File assumed in the current working directory.\n");
-		strcpy(path, "./");
-	}
-	strcat(path, filename);
-	strcpy(temp,filename);
-	pt = strstr(temp, ending);
-	if (pt == NULL)
-	{
-		strcat(path, ending);
-	}
-	/*Load the melody*/
-	_head = Mobot_readMelody(_comms, path);
-	if(_head == NULL)
-	{
-		return -1;
-	}
-	/*Play the melody*/
-	Mobot_loadMelody(_comms, _head);
->>>>>>> 6c002ebeb793231161d3c05fcdf5efe2eac7e334
 	/*Free..*/
 	for(iter = _head; iter != NULL; iter = next)
     {
