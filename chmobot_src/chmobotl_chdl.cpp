@@ -3354,6 +3354,20 @@ EXPORTCH int CMGL_holdJointsAtExit_chdl(void *varg) {
     Ch_VaEnd(interp, ap);
     return retval;
 }
+EXPORTCH int CMGL_groupPlayMelody_chdl(void *varg) {
+    ChInterp_t interp;
+    ChVaList_t ap;
+    class CLinkbotLGroup *mobot;
+	const char *filename;
+    int retval;
+
+    Ch_VaStart(interp, ap, varg);
+    mobot = Ch_VaArg(interp, ap, class CLinkbotLGroup *);
+	filename = Ch_VaArg(interp, ap, const char *);
+    retval = mobot->groupPlayMelody(filename);
+    Ch_VaEnd(interp, ap);
+    return retval;
+}
 
 /*Functions for compatibility with RoboSim*/
 EXPORTCH int LinkbotL_getxy_chdl(void *varg) {

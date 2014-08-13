@@ -341,9 +341,9 @@ int CMobot::melodyLoadPacketNB(mobotMelodyNote_t* melody, int tempo)
 	return Mobot_melodyLoadPacketNB(_comms, melody, tempo);
 }
 
-int CMobot::melodySyncPacketsNB(void)
+int CMobot::melodySyncPacketsNB(int numRobots)
 {
-	return Mobot_melodySyncPacketsNB(_comms);
+	return Mobot_melodySyncPacketsNB(_comms, numRobots);
 }
 
 int CMobot::stopMelody(void)
@@ -383,9 +383,9 @@ void CMelody::setTempo(int bpm)
   _head->tempo = bpm;
 }
 
-void CMelody::addNote(const char* note, int divider)
+/*void CMelody::addNote(const char* note, int divider)
 {
-  Mobot_melodyAddNote(_head, note, divider);
-}
+  Mobot_melodyAddNote(_comms, _head, note, divider);
+}*/
 
 

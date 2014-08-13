@@ -1156,7 +1156,7 @@ int CMobotGroup::groupPlayMelody(const char *filename)
 	int tempo;
     
 	/*Array that keeps track of the heads of the lists for each robot*/
-	_head=(mobotMelodyNote_t**)malloc(sizeof(mobotMelodyNote_t)*_numRobots);
+	//_head=(mobotMelodyNote_t**)malloc(sizeof(mobotMelodyNote_t)*_numRobots);
 
 	/*Read the melody file. Give a melody to each robot*/
 	groupReadMelody(filename, _head, &tempo);
@@ -1166,7 +1166,6 @@ int CMobotGroup::groupPlayMelody(const char *filename)
 		{
 			/*Load the melody in each robot and make it play*/
 			_robots[i]->melodyLoadPacketNB(_head[i], tempo);
-			//_head[i] = _head[i]->next; //wrong
 		}
 		else /*end of the list for that robot*/
 		{
@@ -1175,7 +1174,7 @@ int CMobotGroup::groupPlayMelody(const char *filename)
 		/*Robot 0 is the master robot. Gives the synchronization signal*/
 		if(i == 0)
 		{
-			_robots[i]->melodySyncPacketsNB();
+			_robots[i]->melodySyncPacketsNB(_numRobots);
 		}
 	}
 
@@ -1194,9 +1193,10 @@ int CMobotGroup::groupPlayMelody(const char *filename)
 /*Now it read for all the same file. Then I need to read different parts of the same file*/
 int CMobotGroup::groupReadMelody(const char *filename, mobotMelodyNote_t** head, int* tempo)
 {
+	head=(mobotMelodyNote_t**)malloc(sizeof(mobotMelodyNote_t)*_numRobots);
 	for ( int i = 0; i < _numRobots; i++)
 	{
-		_robots[i]->readMelody(filename, head[i], &tempo);
+		_robots[i]->readMelody(filename, head[i], tempo);
 	}
 	return 0;
 }

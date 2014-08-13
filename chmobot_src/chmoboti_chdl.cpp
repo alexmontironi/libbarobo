@@ -4719,6 +4719,21 @@ EXPORTCH int CMGI_closeGripperNB_chdl(void *varg) {
     Ch_VaEnd(interp, ap);
     return retval;
 }
+
+EXPORTCH int CMGI_groupPlayMelody_chdl(void *varg) {
+    ChInterp_t interp;
+    ChVaList_t ap;
+    class CLinkbotIGroup *mobot;
+	const char *filename;
+    int retval;
+
+    Ch_VaStart(interp, ap, varg);
+    mobot = Ch_VaArg(interp, ap, class CLinkbotIGroup *);
+	filename = Ch_VaArg(interp, ap, const char *);
+    retval = mobot->groupPlayMelody(filename);
+    Ch_VaEnd(interp, ap);
+    return retval;
+}
 /*Functions for compatibility with RoboSim*/
 EXPORTCH int LinkbotI_getxy_chdl(void *varg) {
     ChInterp_t interp;

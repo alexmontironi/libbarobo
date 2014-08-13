@@ -383,7 +383,7 @@ typedef struct mobotMelodyNote_s
 #endif
 
 #ifndef ROBOT_LOAD_MELODY
-#define ROBOT_LOAD-MELODY
+#define ROBOT_LOAD_MELODY
 typedef struct loadMelodyArgs_s
 {
 	int tempo;
@@ -391,14 +391,21 @@ typedef struct loadMelodyArgs_s
 	mobotMelodyNote_t *head;
 	mobot_t* robot;
 } loadMelodyArgs_t;
+#endif
+
 
 /*For melody transmission*/
-#define MAXDURATION 5000; //seconds
+#define MAXDURATION 5000 //milliseconds
+#define MAXMELODYSIZE 15 //max number of notes in a packet
+
+/*#ifndef MELODY_THREAD_MACROS
+#define MELODY_THREAD_MACROS
 MUTEX_T* packet_ready_lock;
 COND_T* melody_sync_cond;
 MUTEX_T* melody_sync_mutex;
-int packetsReady = 0;
-int _sync = 0;
+static int packetsReady = 0;
+static int _sync ;
+#endif*/
 
   
 

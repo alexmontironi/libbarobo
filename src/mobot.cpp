@@ -78,6 +78,16 @@ char** environ;
 #include "commands.h"
 #include <BaroboConfigFile.h>
 
+
+#ifndef MELODY_THREAD_MACROS
+#define MELODY_THREAD_MACROS
+MUTEX_T* packet_ready_lock;
+COND_T* melody_sync_cond;
+MUTEX_T* melody_sync_mutex;
+static int packetsReady = 0;
+static int _sync ;
+#endif
+
 /* FIXME hlh: hacky, shouldn't be using statically-sized arrays for filenames
  * if we can help it */
 #ifndef MAX_PATH
@@ -1490,7 +1500,7 @@ mobotMelodyNote_t * Mobot_readMelody(mobot_t* comms, const char *filename)
 	{
 		fgets(line, 40, fp);
 		sscanf(line, "%s%d", &note, &divider);
-		Mobot_melodyAddNote(head, note, divider);
+		Mobot_melodyAddNote(comms, head, note, divider);
 		
 		
 	}
@@ -1500,47 +1510,67 @@ mobotMelodyNote_t * Mobot_readMelody(mobot_t* comms, const char *filename)
 
 int Mobot_melodyLoadPacketNB(mobot_t* comms, mobotMelodyNote_t* melody, int tempo)
 {
+	/*Build list of arguments to send to the thread*/
 	loadMelodyArgs_t* lArg = (loadMelodyArgs_t*)malloc(sizeof(loadMelodyArgs_t));
-	lArg->robot = comms;
-	lArg->head = melody;
-	lArg->tempo = tempo;
+	lArg->robot = comms; //robot id
+	lArg->head = melody; //head of the list
+	lArg->tempo = tempo; //tempo of the melody
 
-    THREAD_CREATE(_comms->thread, Mobot_melodyLoadPacketThread, (void*)lArg);
+    //Create thread
+    THREAD_CREATE(comms->thread, Mobot_melodyLoadPacketThread, (void*)lArg);
     return 0;
 }
 
+/*Threaded function*/
 void* Mobot_melodyLoadPacketThread(void* arg)
 {
 	loadMelodyArgs_t* lArg = (loadMelodyArgs_t*)arg;
-	MobotMelodyNote_t* iter;
+	mobotMelodyNote_t* iter;
 	uint8_t data[256], buf[64];
-	int retries;
+	uint8_t nullnote[2]; //null note to fill up incomplete buffer
+	mobot_t* comms;
+	int retries, status, slot;
+	int numslots = 3;
+	int bufready = 1;
+	int recvBuf[256];
 	static int id = 0, i =0;
 	double duration;
 
-	iter = lArg->head->next;
+	nullnote[0] = 0;
+    nullnote[1] = 0;
+	comms = lArg->robot;
+
+	iter = (mobotMelodyNote_t*)lArg->head->next;
 
 	while(iter != NULL )
 	{
-		while(duration <= MAXDURATION)
+		/*Build packets based on the time duration*/
+		while(duration < MAXDURATION && i < MAXMELODYSIZE)
 		{
 			data[0] = id;
 			data[1] = lArg->tempo;
-			memcpy(&data[i*2+1], iter->notedata[0], 2);
+			memcpy(&data[i*2+1], &iter->notedata[0], 2);
 			duration += (1000 * 60 * 4 /lArg->tempo /iter->notedata[0]);
-			iter = iter ->next;
 			if (iter->next == NULL)
 			{
-				break;
+				while (duration < MAXDURATION && i < MAXMELODYSIZE)
+				{
+					memcpy(&data[i*2+1], &nullnote[0], 2);
+					duration += (1000 * 60 * 4 /lArg->tempo /8);
+					i++;
+				}
+				break;	
 			}
+			iter = iter ->next;
 		    i++;
 		}
-        
 
-	    MUTEX_LOCK(packet_ready_lock);
+	    /*signal that a new packet is ready*/
+		MUTEX_LOCK(packet_ready_lock);
 	    packetsReady++;
 	    MUTEX_UNLOCK(packet_ready_lock);
-
+        
+		/*Wait for the sync signal from robot 0*/
 	    MUTEX_LOCK(melody_sync_mutex);
 	    while(_sync != 1)
 	    {
@@ -1548,6 +1578,7 @@ void* Mobot_melodyLoadPacketThread(void* arg)
 	    }
 	    MUTEX_UNLOCK(melody_sync_mutex);
 
+		/*Send the packet to the robot*/
 	    for(retries = 0; retries <= MAX_RETRIES ; retries++) 
 	    {
 	        SendToIMobot(comms, BTCMD(CMD_LOADMELODY), data, i*2+2);
@@ -1562,9 +1593,9 @@ void* Mobot_melodyLoadPacketThread(void* arg)
 		    {
 	            bufready = 1;
 			    break;
-		    }
-		    else
-		    {
+		     }
+		     else
+		     {
 	            bufready = 0; 
                 #ifndef _WIN32
                 usleep(1000000);
@@ -1573,37 +1604,44 @@ void* Mobot_melodyLoadPacketThread(void* arg)
                 #endif
                 bufready = 1;
 			    break;
-		    }
-	    }
-	    if ( id == 0) //initialize melody in the firmware when the first packet is sent
-        {
+		     }
+	      }
+	      if ( id == 0) //initialize melody in the firmware when the first packet is sent
+          {
 			  buf[0] = 1;
 	          status = MobotMsgTransaction(comms, BTCMD(CMD_MELODYINIT), buf, 1);
 
-	    }
-	    MUTEX_LOCK(packet_ready_lock);
-	    packetsReady--;
-	    MUTEX_UNLOCK(packet_ready_lock);
-	    id++;
-        }
+	      }
+          
+		  /*probably this goes to sync*/
+	      MUTEX_LOCK(packet_ready_lock);
+	      packetsReady--;
+	      MUTEX_UNLOCK(packet_ready_lock);
+	      id++;
+		  i = 0; //reset counter
+    }
     return NULL;
 }
 
 int Mobot_melodySyncPacketsNB(mobot_t* comms, int numRobots)
 {
+	/*Build arguments list to send to the thread*/
 	loadMelodyArgs_t* lArg = (loadMelodyArgs_t*)malloc(sizeof(loadMelodyArgs_t));
-	lArg->robot = comms;
-	larg->numRobots = numRobots;
-
-    THREAD_CREATE(_comms->thread, Mobot_melodySyncPacketsThread, (void*)lArg);
+	lArg->robot = comms; //robot id
+	lArg->numRobots = numRobots; //number of robots in the group
+    
+	/*Create the thread*/
+    THREAD_CREATE(comms->thread, Mobot_melodySyncPacketsThread, (void*)lArg);
     return 0;
 }
 
+/*Threaded function*/
 void* Mobot_melodySyncPacketsThread(void* arg)
 {
 	loadMelodyArgs_t* lArg = (loadMelodyArgs_t*)arg;
-	int ready = 0;
-
+	static int ready = 0;
+    
+	/*Wait for every robot to have its packet ready*/
 	while (ready < lArg->numRobots)
 	{
 		MUTEX_LOCK(packet_ready_lock);
@@ -1611,12 +1649,26 @@ void* Mobot_melodySyncPacketsThread(void* arg)
 		MUTEX_UNLOCK(packet_ready_lock);
 	}
 	ready = 0;
+	MUTEX_LOCK(melody_sync_mutex);
+	_sync = 1;
 	COND_BROADCAST(melody_sync_cond);
+	MUTEX_UNLOCK(melody_sync_mutex);
+	
+	/*Reset the packets counter*/
+	MUTEX_LOCK(packet_ready_lock);
+	packetsReady = 0;
+	MUTEX_UNLOCK(packet_ready_lock);
+
+	_sync = 0;
+	return NULL;
 }
 
 int Mobot_stopMelody(mobot_t* comms)
 {
 	int retries;
+	int status;
+	uint8_t buf[64];
+
 	for(retries = 0; retries <= MAX_RETRIES && status != 0; retries++) 
     {
         buf[0] = 1;

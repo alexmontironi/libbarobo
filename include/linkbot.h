@@ -942,6 +942,9 @@ class CLinkbotIGroup
 	int closeGripper(void);
 	int closeGripperNB(void);
 
+	/*Melody functions*/
+	int groupPlayMelody(const char* filename);
+
     CMobot **_robots2;
     int _numRobots;
     int argInt;
@@ -1155,6 +1158,9 @@ class CLinkbotLGroup
         double angle);
 	int accelJointCycloidalNB(robotJointId_t id, double angle, double time);
 	int accelJointHarmonicNB(robotJointId_t id, double angle, double time);
+
+	/*Melody functions*/
+	int groupPlayMelody(const char* filename);
 
 
     CMobot **_robots2;

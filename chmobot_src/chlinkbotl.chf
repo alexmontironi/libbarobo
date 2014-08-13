@@ -2865,6 +2865,54 @@ int CLinkbotLGroup::accelJointSmoothNB(int id, double accel0, double accelf, dou
     dlrunfun(fptr, &retval, NULL, this, id, accel0, accelf, vmax, angle);
     return retval;
 }
+int CLinkbotLGroup::groupPlayMelody(const char *filename) {
+    void *fptr;
+    int retval;
+    char path[100], temp[100];
+	char *root = ":";
+	char *divider = "/";
+	char *ending = ".mld";
+	char *pt;
+	int len;
+    int begin, div;
+    
+    /*Build the path*/
+	len=strlen(filename);
+	begin=strcspn(filename, root);
+    /*Probably not a full path*/
+	if (begin != 1)
+	{
+        strcpy(temp,filename);
+		pt = strpbrk(temp, divider);
+		if (pt != NULL)
+		{
+			printf("Error: enter the full path or place the file in the current working directory. Exit.\n");
+			exit(-1);
+		}
+		/*Build the full path*/
+		strcpy(path,getenv("CHHOME"));
+        strcat(path,"/package/chbarobo/melody/");
+		strcat(path,filename);
+	}
+     else
+    {
+        strcpy(path,filename);
+    }
+    strcpy(temp,filename);
+	pt = strstr(temp, ending);
+	if (pt == NULL)
+	{
+		strcat(path, ending);
+	}
+
+    fptr = dlsym(CMobot::g_chmobot_dlhandle, "CMGL_groupPlayMelody_chdl");
+    if(fptr == NULL) {
+        fprintf(_stderr, "Error: %s(): dlsym(): %s\n", __func__,  dlerror());
+        return -1;
+    }
+    dlrunfun(fptr, &retval, NULL, this, path);
+    return retval;
+}
 
 /*Functions for compatibilty with RoboSim*/
 int CLinkbotL::getxy(double & x, double & y) {
