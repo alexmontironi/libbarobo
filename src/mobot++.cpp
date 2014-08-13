@@ -286,6 +286,11 @@ int CMobot::flashFirmwareAsync (std::string hexfile,
 }
 
 /*Melody functions in class CMobot*/
+int CMobot::melodyAddNote(mobotMelodyNote_t* melody, const char* note, int divider)
+{
+	return Mobot_melodyAddNote(_comms, melody, note, divider);
+}
+
 int CMobot::playMelody(const char *filename)
 {
 	char path[100], temp[100];
@@ -327,6 +332,29 @@ int CMobot::playMelody(const char *filename)
     next = iter->next;
     free(iter);
     }
+
+	return 0;
+}
+
+int CMobot::melodyLoadPacketNB(mobotMelodyNote_t* melody, int tempo)
+{
+	return Mobot_melodyLoadPacketNB(_comms, melody, tempo);
+}
+
+int CMobot::melodySyncPacketsNB(void)
+{
+	return Mobot_melodySyncPacketsNB(_comms);
+}
+
+int CMobot::stopMelody(void)
+{
+	return Mobot_stopMelody(_comms);
+}
+
+int CMobot::readMelody(const char* filename, mobotMelodyNote_t* head, int* tempo)
+{
+	head=Mobot_readMelody(_comms, filename);
+	tempo=&(head->tempo);
 
 	return 0;
 }

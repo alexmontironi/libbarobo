@@ -355,6 +355,7 @@ typedef struct mobot_s
   int rawStreamMode;
   void* rawStreamUserData;
   void (*rawStreamDataCallback)(const uint8_t* buf, size_t size, void* userdata);
+
 } mobot_t;
 #endif
 
@@ -380,6 +381,26 @@ typedef struct mobotMelodyNote_s
   struct mobotMelodyNote_s *next;
 } mobotMelodyNote_t;
 #endif
+
+#ifndef ROBOT_LOAD_MELODY
+#define ROBOT_LOAD-MELODY
+typedef struct loadMelodyArgs_s
+{
+	int tempo;
+	int numRobots;
+	mobotMelodyNote_t *head;
+	mobot_t* robot;
+} loadMelodyArgs_t;
+
+/*For melody transmission*/
+#define MAXDURATION 5000; //seconds
+MUTEX_T* packet_ready_lock;
+COND_T* melody_sync_cond;
+MUTEX_T* melody_sync_mutex;
+int packetsReady = 0;
+int _sync = 0;
+
+  
 
 #ifdef NONRELEASE
 #ifndef _CH_
@@ -953,6 +974,11 @@ class DLLIMPORT CMobot
 
 	/*melody functions*/
 	virtual int playMelody(const char *filename);
+	virtual int stopMelody(void);
+	virtual int melodyAddNote(mobotMelodyNote_t* melody, const char* note, int divider);
+	virtual int melodyLoadPacketNB(mobotMelodyNote_t* melody, int tempo);
+	virtual int melodySyncPacketsNB(int numRobots);
+	virtual int readMelody(const char* filename, mobotMelodyNote_t* head, int* tempo);
 
     virtual int systemTime(double &time);
     int transactMessage(int cmd, void* buf, int size);
@@ -1143,6 +1169,10 @@ class CMobotGroup
 	int openGripperNB(double angle);
 	int closeGripper(void);
 	int closeGripperNB(void);
+
+	/*melody functions*/
+	int groupPlayMelody(const char *filename);
+	int groupReadMelody(const char *filename, mobotMelodyNote_t** head, int* tempo);
     
 
   protected:
@@ -1151,6 +1181,7 @@ class CMobotGroup
     int argInt;
     double argDouble;
     int _numAllocated;
+	mobotMelodyNote_t ** _head;
 #ifndef _CH_
     THREAD_T* _thread;
 #else
@@ -1242,10 +1273,15 @@ DLLIMPORT int Mobot_enableJointEventCallback(mobot_t* comms, void* data,
     void (*jointCallback)(int millis, double j1, double j2, double j3, double j4, int mask, void* data));
 DLLIMPORT int Mobot_findMobot(mobot_t* parent, const char* childSerialID);
 DLLIMPORT mobotMelodyNote_t* Mobot_createMelody(int tempo);
-DLLIMPORT int Mobot_melodyAddNote(mobotMelodyNote_t* melody, const char* note, int divider);
+DLLIMPORT int Mobot_melodyAddNote(mobot_t* comms, mobotMelodyNote_t* melody, const char* note, int divider);
 DLLIMPORT int Mobot_loadMelody(mobot_t* comms, mobotMelodyNote_t* melody);
+DLLIMPORT int Mobot_melodyLoadPacketNB(mobot_t* comms, mobotMelodyNote_t* melody, int tempo);
+DLLIMPORT void* Mobot_melodyLoadPacketThread(void*);
+DLLIMPORT int Mobot_melodySyncPacketsNB(mobot_t* comms, int numRobots);
+DLLIMPORT void* Mobot_melodySyncPacketsThread(void *);
 DLLIMPORT int Mobot_playMelody(mobot_t* comms, int id);
 DLLIMPORT mobotMelodyNote_t * Mobot_readMelody(mobot_t* comms, const char *filename);
+DLLIMPORT int Mobot_stopMelody(mobot_t* comms);
 DLLIMPORT int Mobot_getAddress(mobot_t* comms);
 DLLIMPORT mobot_t* Mobot_getDongle();
 DLLIMPORT int Mobot_queryAddresses(mobot_t* comms);

@@ -1226,7 +1226,7 @@ mobotMelodyNote_t* Mobot_createMelody(int tempo)
   return tmp;
 }
 
-int Mobot_melodyAddNote(mobotMelodyNote_t* melody, const char* note, int divider)
+int Mobot_melodyAddNote(mobot_t* comms, mobotMelodyNote_t* melody, const char* note, int divider)
 {
   int i;
   int index;
@@ -1497,6 +1497,134 @@ mobotMelodyNote_t * Mobot_readMelody(mobot_t* comms, const char *filename)
 	fclose(fp);
 	return head;
 }
+
+int Mobot_melodyLoadPacketNB(mobot_t* comms, mobotMelodyNote_t* melody, int tempo)
+{
+	loadMelodyArgs_t* lArg = (loadMelodyArgs_t*)malloc(sizeof(loadMelodyArgs_t));
+	lArg->robot = comms;
+	lArg->head = melody;
+	lArg->tempo = tempo;
+
+    THREAD_CREATE(_comms->thread, Mobot_melodyLoadPacketThread, (void*)lArg);
+    return 0;
+}
+
+void* Mobot_melodyLoadPacketThread(void* arg)
+{
+	loadMelodyArgs_t* lArg = (loadMelodyArgs_t*)arg;
+	MobotMelodyNote_t* iter;
+	uint8_t data[256], buf[64];
+	int retries;
+	static int id = 0, i =0;
+	double duration;
+
+	iter = lArg->head->next;
+
+	while(iter != NULL )
+	{
+		while(duration <= MAXDURATION)
+		{
+			data[0] = id;
+			data[1] = lArg->tempo;
+			memcpy(&data[i*2+1], iter->notedata[0], 2);
+			duration += (1000 * 60 * 4 /lArg->tempo /iter->notedata[0]);
+			iter = iter ->next;
+			if (iter->next == NULL)
+			{
+				break;
+			}
+		    i++;
+		}
+        
+
+	    MUTEX_LOCK(packet_ready_lock);
+	    packetsReady++;
+	    MUTEX_UNLOCK(packet_ready_lock);
+
+	    MUTEX_LOCK(melody_sync_mutex);
+	    while(_sync != 1)
+	    {
+	        COND_WAIT(melody_sync_cond, melody_sync_mutex);
+	    }
+	    MUTEX_UNLOCK(melody_sync_mutex);
+
+	    for(retries = 0; retries <= MAX_RETRIES ; retries++) 
+	    {
+	        SendToIMobot(comms, BTCMD(CMD_LOADMELODY), data, i*2+2);
+            #ifndef _WIN32
+            usleep(1000000);
+            #else
+            Sleep(1000);
+            #endif
+            status = RecvFromIMobot(comms, (uint8_t*)recvBuf, sizeof(recvBuf));
+            slot = id;
+            if(slot < numslots)
+		    {
+	            bufready = 1;
+			    break;
+		    }
+		    else
+		    {
+	            bufready = 0; 
+                #ifndef _WIN32
+                usleep(1000000);
+                #else
+                Sleep(1000);
+                #endif
+                bufready = 1;
+			    break;
+		    }
+	    }
+	    if ( id == 0) //initialize melody in the firmware when the first packet is sent
+        {
+			  buf[0] = 1;
+	          status = MobotMsgTransaction(comms, BTCMD(CMD_MELODYINIT), buf, 1);
+
+	    }
+	    MUTEX_LOCK(packet_ready_lock);
+	    packetsReady--;
+	    MUTEX_UNLOCK(packet_ready_lock);
+	    id++;
+        }
+    return NULL;
+}
+
+int Mobot_melodySyncPacketsNB(mobot_t* comms, int numRobots)
+{
+	loadMelodyArgs_t* lArg = (loadMelodyArgs_t*)malloc(sizeof(loadMelodyArgs_t));
+	lArg->robot = comms;
+	larg->numRobots = numRobots;
+
+    THREAD_CREATE(_comms->thread, Mobot_melodySyncPacketsThread, (void*)lArg);
+    return 0;
+}
+
+void* Mobot_melodySyncPacketsThread(void* arg)
+{
+	loadMelodyArgs_t* lArg = (loadMelodyArgs_t*)arg;
+	int ready = 0;
+
+	while (ready < lArg->numRobots)
+	{
+		MUTEX_LOCK(packet_ready_lock);
+		ready = packetsReady;
+		MUTEX_UNLOCK(packet_ready_lock);
+	}
+	ready = 0;
+	COND_BROADCAST(melody_sync_cond);
+}
+
+int Mobot_stopMelody(mobot_t* comms)
+{
+	int retries;
+	for(retries = 0; retries <= MAX_RETRIES && status != 0; retries++) 
+    {
+        buf[0] = 1;
+		status = MobotMsgTransaction(comms, BTCMD(CMD_STOPMELODY), buf, 1);
+    }
+	return status;
+}
+
 
 int Mobot_playMelody(mobot_t* comms, int id)
 {
