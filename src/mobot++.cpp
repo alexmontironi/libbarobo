@@ -338,6 +338,7 @@ int CMobot::playMelody(const char *filename)
 
 int CMobot::melodyLoadPacketNB(mobotMelodyNote_t* melody, int tempo)
 {
+        printf("loading packet\n");
 	return Mobot_melodyLoadPacketNB(_comms, melody, tempo);
 }
 
@@ -351,11 +352,10 @@ int CMobot::stopMelody(void)
 	return Mobot_stopMelody(_comms);
 }
 
-int CMobot::readMelody(const char* filename, mobotMelodyNote_t* head, int* tempo)
+int CMobot::readMelody(const char* filename, mobotMelodyNote_t** head, int** tempo)
 {
-	head=Mobot_readMelody(_comms, filename);
-	tempo=&(head->tempo);
-
+	*head=Mobot_readMelody(_comms, filename);
+	*tempo=&((*head)->tempo);
 	return 0;
 }
 

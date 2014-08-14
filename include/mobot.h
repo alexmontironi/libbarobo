@@ -985,7 +985,7 @@ class DLLIMPORT CMobot
 	virtual int melodyAddNote(mobotMelodyNote_t* melody, const char* note, int divider);
 	virtual int melodyLoadPacketNB(mobotMelodyNote_t* melody, int tempo);
 	virtual int melodySyncPacketsNB(int numRobots);
-	virtual int readMelody(const char* filename, mobotMelodyNote_t* head, int* tempo);
+	virtual int readMelody(const char* filename, mobotMelodyNote_t** head, int** tempo);
 
     virtual int systemTime(double &time);
     int transactMessage(int cmd, void* buf, int size);
@@ -1179,7 +1179,7 @@ class CMobotGroup
 
 	/*melody functions*/
 	int groupPlayMelody(const char *filename);
-	int groupReadMelody(const char *filename, mobotMelodyNote_t** head, int* tempo);
+	int groupReadMelody(const char *filename, mobotMelodyNote_t** head, int** tempo);
     
 
   protected:

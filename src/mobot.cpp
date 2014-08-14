@@ -1305,6 +1305,9 @@ int Mobot_melodyAddNote(mobot_t* comms, mobotMelodyNote_t* melody, const char* n
   iter->next->notedata[1] = byte;
   byte = index;
   iter->next->notedata[1] |= byte;
+  //printf("notedata[0] %d\n", iter->next->notedata[0]);
+  //printf("notedata[1] %d\n", iter->next->notedata[1]);
+  //printf("iter->next %p\n", iter->next);
   return 0;
 }
 
@@ -1500,6 +1503,7 @@ mobotMelodyNote_t * Mobot_readMelody(mobot_t* comms, const char *filename)
 	{
 		fgets(line, 40, fp);
 		sscanf(line, "%s%d", &note, &divider);
+                //printf("note %s, divider %d\n", note, divider);
 		Mobot_melodyAddNote(comms, head, note, divider);
 		
 		
@@ -1515,9 +1519,12 @@ int Mobot_melodyLoadPacketNB(mobot_t* comms, mobotMelodyNote_t* melody, int temp
 	lArg->robot = comms; //robot id
 	lArg->head = melody; //head of the list
 	lArg->tempo = tempo; //tempo of the melody
-
+    
+    printf("comms %p\n", comms);
+    printf("lArg->head %p\n", lArg->head);
     //Create thread
     THREAD_CREATE(comms->thread, Mobot_melodyLoadPacketThread, (void*)lArg);
+    printf("thread created\n");
     return 0;
 }
 
@@ -1534,23 +1541,36 @@ void* Mobot_melodyLoadPacketThread(void* arg)
 	int bufready = 1;
 	int recvBuf[256];
 	static int id = 0, i =0;
-	double duration;
+	int duration = 0;
+        int tempo = 0;
+        unsigned long temp = 0;
+        int divider = 1;
 
 	nullnote[0] = 0;
-    nullnote[1] = 0;
+        nullnote[1] = 0;
 	comms = lArg->robot;
-
 	iter = (mobotMelodyNote_t*)lArg->head->next;
-
+        tempo = (int)lArg->tempo;
+         
 	while(iter != NULL )
 	{
-		/*Build packets based on the time duration*/
+               
 		while(duration < MAXDURATION && i < MAXMELODYSIZE)
 		{
+		       // printf("duration %d\n", duration);
+                        //printf("iter %p\n", iter);
+                        //printf("divider %d, note %d\n",iter->notedata[0], iter->notedata[1]);
 			data[0] = id;
 			data[1] = lArg->tempo;
+                        divider = iter->notedata[0];
+                        //printf("tempo %d\n", (int)lArg->tempo);
+                        //printf("tempo %d\n", tempo);
+                        //printf("notedata[0] %d\n", divider);
+                        //printf("notedata[1] %d\n", iter->notedata[1]);
 			memcpy(&data[i*2+1], &iter->notedata[0], 2);
-			duration += (1000 * 60 * 4 /lArg->tempo /iter->notedata[0]);
+		        temp = (1000* 60* 4/(tempo)/divider);
+                        //printf("temp %d\n", temp);
+                        duration += temp;
 			if (iter->next == NULL)
 			{
 				while (duration < MAXDURATION && i < MAXMELODYSIZE)
@@ -1563,22 +1583,21 @@ void* Mobot_melodyLoadPacketThread(void* arg)
 			}
 			iter = iter ->next;
 		    i++;
+                    //printf("i %d\n", i);
 		}
 
-	    /*signal that a new packet is ready*/
-		MUTEX_LOCK(packet_ready_lock);
+	    
+	   /* MUTEX_LOCK(packet_ready_lock);
 	    packetsReady++;
-	    MUTEX_UNLOCK(packet_ready_lock);
-        
-		/*Wait for the sync signal from robot 0*/
-	    MUTEX_LOCK(melody_sync_mutex);
+	    MUTEX_UNLOCK(packet_ready_lock);*/
+      
+	    /*MUTEX_LOCK(melody_sync_mutex);
 	    while(_sync != 1)
 	    {
 	        COND_WAIT(melody_sync_cond, melody_sync_mutex);
 	    }
-	    MUTEX_UNLOCK(melody_sync_mutex);
+	    MUTEX_UNLOCK(melody_sync_mutex);*/
 
-		/*Send the packet to the robot*/
 	    for(retries = 0; retries <= MAX_RETRIES ; retries++) 
 	    {
 	        SendToIMobot(comms, BTCMD(CMD_LOADMELODY), data, i*2+2);
@@ -1606,17 +1625,18 @@ void* Mobot_melodyLoadPacketThread(void* arg)
 			    break;
 		     }
 	      }
+              printf("melody loaded\n");
 	      if ( id == 0) //initialize melody in the firmware when the first packet is sent
-          {
+              {
 			  buf[0] = 1;
 	          status = MobotMsgTransaction(comms, BTCMD(CMD_MELODYINIT), buf, 1);
+                  printf("melody started\n");
 
 	      }
           
-		  /*probably this goes to sync*/
-	      MUTEX_LOCK(packet_ready_lock);
+	      /*MUTEX_LOCK(packet_ready_lock);
 	      packetsReady--;
-	      MUTEX_UNLOCK(packet_ready_lock);
+	      MUTEX_UNLOCK(packet_ready_lock);*/
 	      id++;
 		  i = 0; //reset counter
     }
