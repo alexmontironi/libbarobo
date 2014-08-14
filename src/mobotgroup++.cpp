@@ -1178,7 +1178,7 @@ int CMobotGroup::groupPlayMelody(const char *filename)
 		/*Robot 0 is the master robot. Gives the synchronization signal*/
 		if(i == 0)
 		{
-			//_robots[i]->melodySyncPacketsNB(_numRobots);
+			_robots[i]->melodySyncPacketsNB(_numRobots);
 		}
 	}
 
