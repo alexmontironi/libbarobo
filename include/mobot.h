@@ -396,7 +396,7 @@ typedef struct loadMelodyArgs_s
 
 /*For melody transmission*/
 #define MAXDURATION 5000 //milliseconds
-#define MAXMELODYSIZE 15 //max number of notes in a packet
+#define MAXMELODYSIZE 3 //max number of notes in a packet
   
 
 #ifdef NONRELEASE

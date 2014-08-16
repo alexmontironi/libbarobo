@@ -1156,34 +1156,29 @@ int CMobotGroup::groupPlayMelody(const char *filename)
 	int *tempo;
     
 	/*Array that keeps track of the heads of the lists fior each robot*/
-	_head=(mobotMelodyNote_t**)malloc(sizeof(mobotMelodyNote_t)*_numRobots);
+	_head=(mobotMelodyNote_t**)malloc(sizeof(mobotMelodyNote_t)*(_numRobots-1));
 
         /*Read the melody file. Give a melody to each robot*/
 	groupReadMelody(filename, _head, &tempo);
-        printf("melody loaded\n");
-	printf("head %p\n", _head);
+        printf("melody read\n");
 	for (int i = 0; i < _numRobots; i++)
 	{
-		if( _head[i] != NULL)
-		{
-                        printf("tempo %d\n", *tempo);
-                        printf("_head[i] %p\n", _head[i]);
-			/*Load the melody in each robot and make it play*/
-			_robots[i]->melodyLoadPacketNB(_head[i], *tempo);
-		}
-		else /*end of the list for that robot*/
-		{
-			_robots[i]->stopMelody();
-		}
-		/*Robot 0 is the master robot. Gives the synchronization signal*/
-		if(i == 0)
-		{
-			_robots[i]->melodySyncPacketsNB(_numRobots);
-		}
+            if ( i != 0 )
+            {
+                 _robots[i]->melodyLoadPacketNB(_head[i-1], *tempo);
+                 printf("i = %d load\n", i);
+		
+            }
+            else /*robot 0 only passes over messages*/
+            {
+                 _robots[i]->melodySyncPacketsNB(_numRobots);
+                 printf("i = %d sync\n", i);
+            }
+		 
 	}
 
 	/*Free the list*/
-	for ( int i = 0; i < _numRobots; i++)
+	for ( int i = 0; i < (_numRobots-1); i++)
 	{
 		for(iter = _head[i]; iter != NULL; iter = next)
         {
@@ -1197,9 +1192,9 @@ int CMobotGroup::groupPlayMelody(const char *filename)
 /*Now it read for all the same file. Then I need to read different parts of the same file*/
 int CMobotGroup::groupReadMelody(const char *filename, mobotMelodyNote_t** head, int** tempo)
 {
-	for ( int i = 0; i < _numRobots; i++)
+	for ( int i = 1; i < _numRobots; i++)
 	{
-		_robots[i]->readMelody(filename, &head[i], tempo);
+		_robots[i]->readMelody(filename, &head[i-1], tempo);
                  
 	}
 	return 0;

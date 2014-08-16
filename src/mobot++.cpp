@@ -338,7 +338,6 @@ int CMobot::playMelody(const char *filename)
 
 int CMobot::melodyLoadPacketNB(mobotMelodyNote_t* melody, int tempo)
 {
-        printf("loading packet\n");
 	return Mobot_melodyLoadPacketNB(_comms, melody, tempo);
 }
 
