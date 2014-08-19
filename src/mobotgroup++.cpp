@@ -25,6 +25,10 @@
 #define DEPRECATED(from, to) \
   fprintf(stderr, "Warning: The function \"%s()\" is deprecated. Please use \"%s()\"\n" , from, to)
 
+/*For group melody functions*/
+static int melodyStop = 0;
+static int numPackets = 0;
+
 CMobotGroup::CMobotGroup()
 {
   _numRobots = 0;
@@ -1152,7 +1156,7 @@ int CMobotGroup::closeGripperNB()
 int CMobotGroup::groupPlayMelody(const char *filename)
 {
 	mobotMelodyNote_t** _head = NULL;
-	mobotMelodyNote_t *iter, *next;
+	mobotMelodyNote_t *iter, *next, *newHead;
 	int *tempo;
     
 	/*Array that keeps track of the heads of the lists fior each robot*/
@@ -1161,7 +1165,48 @@ int CMobotGroup::groupPlayMelody(const char *filename)
         /*Read the melody file. Give a melody to each robot*/
 	groupReadMelody(filename, _head, &tempo);
         printf("melody read\n");
-	for (int i = 0; i < _numRobots; i++)
+
+        while( melodyStop != 1)
+        {
+            for (int i = 0; i<_numRobots; i++)
+            {
+                printf("i %d\n", i);
+                printf("&_head[i] %p\n", &(_head[i]));
+                if(_head[i]->next != NULL)
+                {
+                    newHead=_robots[i]->melodyLoadPacket(&(_head[i]), *tempo, _numRobots);
+                    numPackets ++;
+                    _head[i] = newHead;
+                    printf("&_head[i] %p\n", &(_head[i]));
+                    printf("numPackets %d\n", numPackets);
+                }
+                else
+                {
+                    melodyStop = 1;
+                    numPackets = 0;
+                    printf("stopping\n");
+                    break;
+                }
+                
+            }
+            if (numPackets == _numRobots)
+            {
+                for (int i = 0; i<_numRobots; i++)
+                {
+                    printf("starting melody\n");
+                    _robots[i]->startMelody();
+                }
+                numPackets = 1;
+            }
+         }
+         
+         for ( int i = 0; i < _numRobots; i++)
+         {
+                  printf("stopping melody\n");
+                  _robots[i]->stopMelody();
+         }      
+                
+	/*for (int i = 0; i < _numRobots; i++)
 	{
             if ( i != 0 )
             {
@@ -1169,16 +1214,16 @@ int CMobotGroup::groupPlayMelody(const char *filename)
                  printf("i = %d load\n", i);
 		
             }
-            else /*robot 0 only passes over messages*/
+            else 
             {
                  _robots[i]->melodySyncPacketsNB(_numRobots);
                  printf("i = %d sync\n", i);
             }
 		 
-	}
+	}*/
 
 	/*Free the list*/
-	for ( int i = 0; i < (_numRobots-1); i++)
+	for ( int i = 0; i < _numRobots; i++)
 	{
 		for(iter = _head[i]; iter != NULL; iter = next)
         {
@@ -1192,9 +1237,9 @@ int CMobotGroup::groupPlayMelody(const char *filename)
 /*Now it read for all the same file. Then I need to read different parts of the same file*/
 int CMobotGroup::groupReadMelody(const char *filename, mobotMelodyNote_t** head, int** tempo)
 {
-	for ( int i = 1; i < _numRobots; i++)
+	for ( int i = 0; i < _numRobots; i++)
 	{
-		_robots[i]->readMelody(filename, &head[i-1], tempo);
+		_robots[i]->readMelody(filename, &head[i], tempo);
                  
 	}
 	return 0;

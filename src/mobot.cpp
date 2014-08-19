@@ -1519,6 +1519,98 @@ mobotMelodyNote_t * Mobot_readMelody(mobot_t* comms, const char *filename)
 	return head;
 }
 
+int Mobot_melodyLoadPacket(mobot_t* comms, mobotMelodyNote_t*** melody, int tempo, int numRobots)
+{
+  uint8_t data[256], buf[64];
+  uint8_t length;
+  uint8_t nullnote[2]; //null note to fill up incomplete buffer
+  int i, slot, inull;
+  static int count = 0;
+  static int id = 0;
+  int numslots = 3; //number of slots in the EEPROM memory 
+  int size = 40; //number of notes in each packet. 40
+  int status = 1;
+  int retries;
+  int bufready = 1; //flag to know when to send new data. 1 means it's ok to send.
+  int recvBuf[256]; 
+  unsigned long ms=0, us=0;
+
+  nullnote[0] = 0;
+  nullnote[1] = 0;
+
+  mobotMelodyNote_t* iter;
+  iter = (**melody)->next;
+  //get the number of notes in the list
+  for(length = 0; iter != NULL; length++, iter = iter->next);
+  length--;
+  printf("length %d\n", length);
+ 
+  if (id >= 3)
+  {
+      data[0] = (uint8_t)(3 - id);
+  }
+  else
+  {
+      data[0] = (uint8_t)id;
+  }
+  data[1] = tempo;
+  printf("data[0] %d\n", (int)data[0]);
+  /*Build the packet*/
+  for(i = 1; i <= size; i++) 
+  {
+          if ((**melody)->next == NULL || i == size)
+          {
+	      inull = i;
+              while ( i <= size)
+              {
+		  memcpy(&data[i*2+1], &nullnote[0], 2);
+                  i++;
+              }
+              break;
+           }
+	   memcpy(&data[i*2+1], &((**melody)->notedata[0]), 2);
+           printf("notedata[0] %d  notedata[1] %d\n", (**melody)->notedata[0], (**melody)->notedata[1]);
+	   *melody = &((**melody)->next);
+           printf("*melody %p\n", *melody);
+
+  }
+  data[2] = (uint8_t)i; //number of notes in each packet
+  /*Send the packet of notes*/
+  for(retries = 0; retries <= MAX_RETRIES ; retries++) 
+  {
+        SendToIMobot(comms, BTCMD(CMD_LOADMELODY), data, i*2+2);
+        #ifndef _WIN32
+        usleep(1000000);
+        #else
+        Sleep(1000);
+        #endif
+        status = RecvFromIMobot(comms, (uint8_t*)recvBuf, sizeof(recvBuf));
+ }
+  count ++;
+  printf("count %d numRobots %d\n", count, numRobots);
+  if ( count == numRobots)
+  {
+     id ++;
+     count = 0;
+  }
+  printf("status %d\n", status);
+  return status;
+}
+
+int Mobot_startMelody(mobot_t* comms)
+{   
+    uint8_t buf[64];
+    int status, retries;
+
+    for(retries = 0; retries <= MAX_RETRIES && status != 0; retries++) 
+    {
+        buf[0] = 1;
+        status = MobotMsgTransaction(comms, BTCMD(CMD_MELODYINIT), buf, 1);
+    }
+    return status;
+}
+
+
 int Mobot_melodyLoadPacketNB(mobot_t* comms, mobotMelodyNote_t* melody, int tempo)
 {
 	/*Build list of arguments to send to the thread*/
