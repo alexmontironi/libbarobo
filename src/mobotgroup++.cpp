@@ -1156,72 +1156,65 @@ int CMobotGroup::closeGripperNB()
 int CMobotGroup::groupPlayMelody(const char *filename)
 {
 	mobotMelodyNote_t** _head = NULL;
-	mobotMelodyNote_t *iter, *next, *newHead;
+	mobotMelodyNote_t *iter, *next, *newHead, *loop;
 	int *tempo;
+        int length = 0;
+        int ms, us;
+        ms = 0;
+        us = 0;
     
 	/*Array that keeps track of the heads of the lists fior each robot*/
 	_head=(mobotMelodyNote_t**)malloc(sizeof(mobotMelodyNote_t)*(_numRobots-1));
 
         /*Read the melody file. Give a melody to each robot*/
 	groupReadMelody(filename, _head, &tempo);
-        printf("melody read\n");
 
         while( melodyStop != 1)
         {
             for (int i = 0; i<_numRobots; i++)
             {
-                printf("i %d\n", i);
-                printf("&_head[i] %p\n", &(_head[i]));
                 if(_head[i]->next != NULL)
                 {
+                    loop = _head[i];
+                    for (length = 0; loop != NULL; length++, loop = loop->next);
                     newHead=_robots[i]->melodyLoadPacket(&(_head[i]), *tempo, _numRobots);
                     numPackets ++;
                     _head[i] = newHead;
-                    printf("&_head[i] %p\n", &(_head[i]));
-                    printf("numPackets %d\n", numPackets);
                 }
                 else
                 {
                     melodyStop = 1;
                     numPackets = 0;
-                    printf("stopping\n");
                     break;
                 }
                 
             }
             if (numPackets == _numRobots)
             {
+                printf("Starting melody");
                 for (int i = 0; i<_numRobots; i++)
                 {
-                    printf("starting melody\n");
+                    printf("\n");
                     _robots[i]->startMelody();
                 }
                 numPackets = 1;
             }
          }
-         
+         ms = (10000 * 60* 4 /(*tempo)/8.0);
+         us = ms * 1000;
+         #ifndef _WIN32
+         usleep(us);
+         #else
+         Sleep(ms);
+         #endif
+         printf("Stopping melody");
          for ( int i = 0; i < _numRobots; i++)
          {
-                  printf("stopping melody\n");
                   _robots[i]->stopMelody();
+                  printf("\n");
+                  
          }      
                 
-	/*for (int i = 0; i < _numRobots; i++)
-	{
-            if ( i != 0 )
-            {
-                 _robots[i]->melodyLoadPacketNB(_head[i-1], *tempo);
-                 printf("i = %d load\n", i);
-		
-            }
-            else 
-            {
-                 _robots[i]->melodySyncPacketsNB(_numRobots);
-                 printf("i = %d sync\n", i);
-            }
-		 
-	}*/
-
 	/*Free the list*/
 	for ( int i = 0; i < _numRobots; i++)
 	{

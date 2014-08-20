@@ -336,20 +336,16 @@ int CMobot::playMelody(const char *filename)
 	return 0;
 }
 
-int CMobot::melodyLoadPacketNB(mobotMelodyNote_t* melody, int tempo)
-{
-	return Mobot_melodyLoadPacketNB(_comms, melody, tempo);
-}
 
 mobotMelodyNote_t* CMobot::melodyLoadPacket(mobotMelodyNote_t** melody, int tempo, int numRobots)
 {
        mobotMelodyNote_t* head;
        *melody = (*melody)->next;
-       printf("melody %p\n", melody);
+       //printf("melody %p\n", melody);
        
        Mobot_melodyLoadPacket(_comms, &melody, tempo, numRobots);
        head = *melody;
-       printf("&head %p\n", &head);
+       //printf("&head %p\n", &head);
        return head;
 }
  
@@ -358,10 +354,6 @@ int CMobot::startMelody(void)
       return Mobot_startMelody(_comms);
 }
 
-int CMobot::melodySyncPacketsNB(int numRobots)
-{
-	return Mobot_melodySyncPacketsNB(_comms, numRobots);
-}
 
 int CMobot::stopMelody(void)
 {

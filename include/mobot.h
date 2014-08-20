@@ -391,13 +391,7 @@ typedef struct loadMelodyArgs_s
 	mobotMelodyNote_t *head;
 	mobot_t* robot;
 } loadMelodyArgs_t;
-#endif
-
-
-/*For melody transmission*/
-#define MAXDURATION 5000 //milliseconds
-#define MAXMELODYSIZE 3 //max number of notes in a packet
-  
+#endif 
 
 #ifdef NONRELEASE
 #ifndef _CH_
@@ -974,9 +968,7 @@ class DLLIMPORT CMobot
 	virtual int stopMelody(void);
         virtual int startMelody(void);
 	virtual int melodyAddNote(mobotMelodyNote_t* melody, const char* note, int divider);
-	virtual int melodyLoadPacketNB(mobotMelodyNote_t* melody, int tempo);
         virtual mobotMelodyNote_t* melodyLoadPacket(mobotMelodyNote_t** melody, int tempo, int numRobots);
-	virtual int melodySyncPacketsNB(int numRobots);
 	virtual int readMelody(const char* filename, mobotMelodyNote_t** head, int** tempo);
 
     virtual int systemTime(double &time);
@@ -1274,11 +1266,7 @@ DLLIMPORT int Mobot_findMobot(mobot_t* parent, const char* childSerialID);
 DLLIMPORT mobotMelodyNote_t* Mobot_createMelody(int tempo);
 DLLIMPORT int Mobot_melodyAddNote(mobot_t* comms, mobotMelodyNote_t* melody, const char* note, int divider);
 DLLIMPORT int Mobot_loadMelody(mobot_t* comms, mobotMelodyNote_t* melody);
-DLLIMPORT int Mobot_melodyLoadPacketNB(mobot_t* comms, mobotMelodyNote_t* melody, int tempo);
-DLLIMPORT void* Mobot_melodyLoadPacketThread(void*);
 DLLIMPORT int Mobot_melodyLoadPacket(mobot_t* comms, mobotMelodyNote_t*** melody, int tempo, int numRobots);
-DLLIMPORT int Mobot_melodySyncPacketsNB(mobot_t* comms, int numRobots);
-DLLIMPORT void* Mobot_melodySyncPacketsThread(void *);
 DLLIMPORT int Mobot_playMelody(mobot_t* comms, int id);
 DLLIMPORT mobotMelodyNote_t * Mobot_readMelody(mobot_t* comms, const char *filename);
 DLLIMPORT int Mobot_stopMelody(mobot_t* comms);
