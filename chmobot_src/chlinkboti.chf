@@ -4,6 +4,9 @@
 #include <stdarg.h>
 #include <array.h>
 
+#define DEPRECATED(from, to) \
+  fprintf(stdout, "Warning: The function \"%s()\" is deprecated. Please use \"%s()\"\n" , from, to)
+
 CLinkbotI::CLinkbotI() {
   void *fptr;
   /* Here to load the dynamically loaded library if necessary.
@@ -238,7 +241,7 @@ int CLinkbotI::blinkLED(double delay, int numBlinks) {
     return retval;
 }
 int CLinkbotI::connect() {
-    void *fptr;
+    /*void *fptr;
     int retval;
 
     fptr = dlsym(CMobot::g_chmobot_dlhandle, "LinkbotI_connect_chdl");
@@ -247,7 +250,8 @@ int CLinkbotI::connect() {
         return -1;
     }
     dlrunfun(fptr, &retval, NULL, this);
-    return retval;
+    return retval;*/
+    return 0;
 }
 int CLinkbotI::connectWithAddress(char *address, ...) {
     void *fptr;
@@ -362,6 +366,13 @@ int CLinkbotI::disableButtonCallback() {
     return retval;
 }
 int CLinkbotI::disableRecordDataShift() {
+    int retval;
+    
+    DEPRECATED("disableRecordDataShift", "recordNoDataShift");
+    retval=this->recordNoDataShift();
+    return retval;
+}
+int CLinkbotI::recordNoDataShift() {
     void *fptr;
     int retval;
 
@@ -372,7 +383,9 @@ int CLinkbotI::disableRecordDataShift() {
     }
     dlrunfun(fptr, &retval, NULL, this);
     return retval;
-}
+    
+    }
+
 int CLinkbotI::driveToDirect(double angle1, double angle2, double angle3) {
     void *fptr;
     int retval;
@@ -530,6 +543,15 @@ int CLinkbotI::enableButtonCallback(void* userdata, void (*buttonCallback)(void*
     return retval;
 }
 int CLinkbotI::enableRecordDataShift() {
+    int retval;
+    
+    DEPRECATED("enableRecordDataShift", "recordDataShift");
+    
+    retval = this->recordDataShift();
+    return retval;
+}
+
+int CLinkbotI::recordDataShift() {
     void *fptr;
     int retval;
 
@@ -540,7 +562,9 @@ int CLinkbotI::enableRecordDataShift() {
     }
     dlrunfun(fptr, &retval, NULL, this);
     return retval;
+    
 }
+
 int CLinkbotI::getAccelerometerData(double & x, double & y, double & z) {
     void *fptr;
     int retval;
@@ -1530,30 +1554,28 @@ int CLinkbotI::recordAnglesEnd(int &num) {
     dlrunfun(fptr, &retval, NULL, this, &num);
     return retval;
 }
-int CLinkbotI::recordDistanceBegin(int id, double* &time, double* &distance, double radius, double seconds, ...) {
+int CLinkbotI::recordDistanceBegin(double* &time, double* &distance, double radius, double seconds) {
     void *fptr;
     int retval;
     va_list ap;
     int shiftData = 1;
-    va_start(ap, seconds);
+    int id = 1;
 
     fptr = dlsym(CMobot::g_chmobot_dlhandle, "LinkbotI_recordDistanceBegin_chdl");
     if(fptr == NULL) {
         fprintf(_stderr, "Error: %s(): dlsym(): %s\n", __func__,  dlerror());
         return -1;
     }
-    if(va_count(ap) == 1) {
-      shiftData = va_arg(ap, int);
-      dlrunfun(fptr, &retval, NULL, this, id, &time, &distance, radius, seconds, shiftData);
-    } else {
-      dlrunfun(fptr, &retval, NULL, this, id, &time, &distance, radius, seconds);
-    }
-    va_end(ap);
+    
+    dlrunfun(fptr, &retval, NULL, this, id, &time, &distance, radius, seconds, shiftData);
+    
     return retval;
 }
-int CLinkbotI::recordDistanceEnd(int id, int &num) {
+
+int CLinkbotI::recordDistanceEnd(int &num) {
     void *fptr;
     int retval;
+    int id = 1;
 
     fptr = dlsym(CMobot::g_chmobot_dlhandle, "LinkbotI_recordDistanceEnd_chdl");
     if(fptr == NULL) {
@@ -1617,6 +1639,7 @@ int CLinkbotI::recordDistancesBegin(
     va_end(ap);
     return retval;
 }
+
 int CLinkbotI::recordDistancesEnd(int &num) {
     void *fptr;
     int retval;
@@ -2232,6 +2255,50 @@ int CLinkbotI::driveDistanceNB(double distance, double radius) {
     return retval;
 }
 int CLinkbotI::driveForward(double angle) {
+    int retval;
+    
+    fprintf(stdout, "Warning: The function \"%s()\" is deprecated. Please use \"%s\"\n",
+		"driveForward", "driveAngle(angle)");
+    retval = this->driveAngle(angle);
+    return retval;
+}
+int CLinkbotI::driveForwardNB(double angle) {
+    int retval;
+    
+    fprintf(stdout, "Warning: The function \"%s()\" is deprecated. Please use \"%s\"\n",
+		"driveForwardNB", "driveAngleNB(angle)");
+    retval = this->driveAngleNB(angle);
+    return retval;
+}
+int CLinkbotI::driveBackward(double angle) {
+    
+    int retval;
+    fprintf(stdout, "Warning: The function \"%s()\" is deprecated. Please use \"%s\"\n",
+		"driveBackward", "driveAngle(-angle)");
+    retval = this->driveAngle(-angle);
+    return retval;
+}
+int CLinkbotI::driveBackwardNB(double angle) {
+    
+    int retval;
+    fprintf(stdout, "Warning: The function \"%s()\" is deprecated. Please use \"%s\"\n",
+		"driveBackwardNB", "driveAngleNB(-angle)");
+    retval = this->driveAngle(-angle);
+    return retval;
+    
+    /*void *fptr;
+    int retval;
+
+    fptr = dlsym(CMobot::g_chmobot_dlhandle, "LinkbotI_driveBackwardNB_chdl");
+    if(fptr == NULL) {
+        fprintf(_stderr, "Error: %s(): dlsym(): %s\n", __func__,  dlerror());
+        return -1;
+    }
+    dlrunfun(fptr, &retval, NULL, this, angle);
+    return retval;*/
+}
+int CLinkbotI::driveAngle(double angle) {
+    
     void *fptr;
     int retval;
 
@@ -2242,36 +2309,13 @@ int CLinkbotI::driveForward(double angle) {
     }
     dlrunfun(fptr, &retval, NULL, this, angle);
     return retval;
+    
 }
-int CLinkbotI::driveForwardNB(double angle) {
+int CLinkbotI::driveAngleNB(double angle) {
     void *fptr;
     int retval;
 
     fptr = dlsym(CMobot::g_chmobot_dlhandle, "LinkbotI_driveForwardNB_chdl");
-    if(fptr == NULL) {
-        fprintf(_stderr, "Error: %s(): dlsym(): %s\n", __func__,  dlerror());
-        return -1;
-    }
-    dlrunfun(fptr, &retval, NULL, this, angle);
-    return retval;
-}
-int CLinkbotI::driveBackward(double angle) {
-    void *fptr;
-    int retval;
-
-    fptr = dlsym(CMobot::g_chmobot_dlhandle, "LinkbotI_driveBackward_chdl");
-    if(fptr == NULL) {
-        fprintf(_stderr, "Error: %s(): dlsym(): %s\n", __func__,  dlerror());
-        return -1;
-    }
-    dlrunfun(fptr, &retval, NULL, this, angle);
-    return retval;
-}
-int CLinkbotI::driveBackwardNB(double angle) {
-    void *fptr;
-    int retval;
-
-    fptr = dlsym(CMobot::g_chmobot_dlhandle, "LinkbotI_driveBackwardNB_chdl");
     if(fptr == NULL) {
         fprintf(_stderr, "Error: %s(): dlsym(): %s\n", __func__,  dlerror());
         return -1;

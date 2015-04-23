@@ -4,6 +4,9 @@
 #include <stdarg.h>
 #include <array.h>
 
+#define DEPRECATED(from, to) \
+  fprintf(stdout, "Warning: The function \"%s()\" is deprecated. Please use \"%s()\"\n" , from, to)
+
 CLinkbotL::CLinkbotL() {
   void *fptr;
   /* Here to load the dynamically loaded library if necessary.
@@ -149,7 +152,7 @@ int CLinkbotL::blinkLED(double delay, int numBlinks) {
     return retval;
 }
 int CLinkbotL::connect() {
-    void *fptr;
+    /*void *fptr;
     int retval;
 
     fptr = dlsym(CMobot::g_chmobot_dlhandle, "LinkbotL_connect_chdl");
@@ -158,7 +161,8 @@ int CLinkbotL::connect() {
         return -1;
     }
     dlrunfun(fptr, &retval, NULL, this);
-    return retval;
+    return retval;*/
+    return 0;
 }
 int CLinkbotL::connectWithAddress(char *address, ...) {
     void *fptr;
@@ -272,6 +276,14 @@ int CLinkbotL::disableButtonCallback() {
     return retval;
 }
 int CLinkbotL::disableRecordDataShift() {
+    int retval;
+    
+    DEPRECATED("disableRecordDataShift", "recordNoDataShift");
+    
+    retval = this->recordNoDataShift();
+    return retval;
+}
+int CLinkbotL::recordNoDataShift() {
     void *fptr;
     int retval;
 
@@ -282,7 +294,9 @@ int CLinkbotL::disableRecordDataShift() {
     }
     dlrunfun(fptr, &retval, NULL, this);
     return retval;
+   
 }
+
 int CLinkbotL::driveToDirect(double angle1, double angle2, double angle3) {
     void *fptr;
     int retval;
@@ -441,8 +455,18 @@ int CLinkbotL::enableButtonCallback(void* userdata, void (*buttonCallback)(void*
     return retval;
 }
 int CLinkbotL::enableRecordDataShift() {
+    int retval;
+    
+    DEPRECATED("enableRecordDataShift", "recordDataShift");
+    
+    retval = this->recordDataShift();
+    return retval;
+}
+
+int CLinkbotL::recordDataShift() {
     void *fptr;
     int retval;
+
 
     fptr = dlsym(CMobot::g_chmobot_dlhandle, "LinkbotL_enableRecordDataShift_chdl");
     if(fptr == NULL) {
@@ -451,7 +475,9 @@ int CLinkbotL::enableRecordDataShift() {
     }
     dlrunfun(fptr, &retval, NULL, this);
     return retval;
+    
 }
+
 int CLinkbotL::getAccelerometerData(double & x, double & y, double & z) {
     void *fptr;
     int retval;

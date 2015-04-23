@@ -212,6 +212,8 @@ class CLinkbotI
     int driveToNB(double angle1, double angle2, double angle3);
 
 	/*New car finctions*/
+	int driveAngle(double angle);
+	int driveAngleNB(double angle);
 	int driveBackward(double angle);
     int driveBackwardNB(double angle);
 	int driveDistance(double distance, double radius);
@@ -238,6 +240,8 @@ class CLinkbotI
 	int delay(unsigned int milliseconds);
     int enableButtonCallback(void* userdata, void (*buttonCallback)(void* userdata, int button, int buttonDown));
     int disableButtonCallback();
+	int recordDataShift();
+	int recordNoDataShift();
     int enableRecordDataShift();
     int disableRecordDataShift();
     int isConnected();
@@ -332,9 +336,11 @@ class CLinkbotI
                      double seconds,
                      ...);
     int recordAngleBegin(robotJointId_t id, robotRecordData_t &time, robotRecordData_t &angle, double seconds, ...);
-    int recordDistanceBegin(robotJointId_t id, robotRecordData_t &time, robotRecordData_t &distance, double radius, double seconds, ...);
+	int recordDistanceBegin(robotRecordData_t &time, robotRecordData_t &distance, double radius, double seconds);
+    //int recordDistanceBegin(robotJointId_t id, robotRecordData_t &time, robotRecordData_t &distance, double radius, double seconds, ...);
     int recordAngleEnd(robotJointId_t id, int &num);
-    int recordDistanceEnd(robotJointId_t id, int &num);
+	int recordDistanceEnd(int &num);
+    //int recordDistanceEnd(robotJointId_t id, int &num);
     int recordDistanceOffset(double distance);
     int recordAnglesBegin(robotRecordData_t &time, 
                           robotRecordData_t &angle1, 
@@ -527,6 +533,8 @@ class CLinkbotL
     int driveToNB(double angle1, double angle2, double angle3);
     int enableButtonCallback(void* userdata, void (*buttonCallback)(void* userdata, int button, int buttonDown));
     int disableButtonCallback();
+	int recordDataShift();
+	int recordNoDataShift();
     int enableRecordDataShift();
     int disableRecordDataShift();
     int isConnected();
