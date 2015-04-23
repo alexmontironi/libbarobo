@@ -94,8 +94,8 @@ mobot_set_functions++.obj: ../src/mobot_set_functions++.cpp $(HEADERS)
 	ch dlcomp libmobot.dl cplusplus $(CFLAGS) ../src/mobot_set_functions++.cpp
 	
 # RGB hash table file
-rgbhashtable.obj: ../src/rgbhashtable.c $(HEADERS)
-	ch dlcomp libmobot.dl cplusplus $(CFLAGS) ../src/rgbhashtable.c
+rgbhashtable.obj: ../src/rgbhashtable.cpp $(HEADERS)
+	ch dlcomp libmobot.dl cplusplus $(CFLAGS) ../src/rgbhashtable.cpp
 
 # Linkbot Files
 linkbot++.obj: ../src/linkbot++.cpp $(HEADERS)
