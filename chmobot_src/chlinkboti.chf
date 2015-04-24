@@ -2520,7 +2520,7 @@ int CLinkbotIGroup::addRobots(array CLinkbotI robots[], ...)
 
 int CLinkbotIGroup::connect()
 {
-    void *fptr;
+    /*void *fptr;
     int retval;
 
     fptr = dlsym(CMobot::g_chmobot_dlhandle, "CMGI_connect_chdl");
@@ -2529,7 +2529,8 @@ int CLinkbotIGroup::connect()
         return -1;
     }
     dlrunfun(fptr, &retval, NULL, this);
-    return retval;
+    return retval;*/
+    return 0;
 }
 
 int CLinkbotIGroup::driveJointToDirect(int id, double angle) {
